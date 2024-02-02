@@ -28,6 +28,8 @@
 //#define Vcc 12
 #define ENABLE 8
 
+boolean NL = true;
+
 /* ---------------------------------------------------------------
 //HC 05
 //Enable HIGHSPEED  38400
@@ -58,6 +60,7 @@ AT+UART:38400,0,0
 
 postup pre HM-10
 HM-10
+https://people.ece.cornell.edu/land/courses/ece4760/PIC32/uart/HM10/DSD%20TECH%20HM-10%20datasheet.pdf
 HM-10
 
 PIN = 000000
@@ -70,7 +73,36 @@ https://www.martyncurrey.com/hm-10-bluetooth-4ble-modules/
 https://www.martyncurrey.com/hm-10-bluetooth-4ble-modules/#arduinoToHM-10
 
 
+https://www.martyncurrey.com/hm-10-bluetooth-4ble-modules/
+
 AT -> na odpovedat OK
+
+AT+NAME?
+19:31:48.031 -> OK+Get:HMSoft
+
+master
+AT+ADDR?
+19:32:19.739 -> OK+ADDR:=D43639A63BC4
+
+
+SLAVE
+AT+ADDR?
+OK+ADDR:3CA308B4E3B5
+
+AT+CHAR?
+19:36:03.324 -> OK_Get:0xFFE1
+
+AT+UUID?
+19:36:29.159 -> OK+Get:0xFFE0
+
+AT+ROLE?
+19:37:53.160 -> OK+Get:0
+
+AT+VERR?  NEFUNGUJE. NEODPOVEDA  POUZI  AT+VERS?
+AT+VERS?
+HMSoft V005
+
+AT+NAME?
 
 */
 
@@ -117,7 +149,7 @@ void loop() {
     while (Serial.available()) {
       c = Serial.read();
       //Serial.print("Send'"+String(c)+"'");
-      Serial.print(c);
+      
 
       #ifdef IS_HM_10
       // do not send line end characters to the HM-10
@@ -125,7 +157,16 @@ void loop() {
         {  
              bluetooth.write(c);
         }
+        
+        // Echo the user input to the main window. 
+        // If there is a new line print the ">" character.
+        if (NL) { Serial.print("\r\n>");  NL = false; }
+        
+        Serial.print(c);
+        
+        if (c==10) { NL = true; }
       #else
+      Serial.print(c);
         bluetooth.write(c);
       #endif
       
