@@ -1,0 +1,347 @@
+#include <EasyTransfer.h>
+
+//create object
+EasyTransfer ET1;   // send serial
+EasyTransfer ET2;   // rec serial
+
+#include <Wire.h>  // Comes with Arduino IDE
+#include <LiquidCrystal_I2C.h>
+
+#define BUTTON1 44
+#define BUTTON2 45
+#define BUTTON3 46
+#define BUTTON4 47
+#define BUTTON5 47
+
+#define BLUETOOTH_SWITCH 6
+#define DISPLAY_SWITCH 7
+
+#define SWITCH1Up 20
+#define SWITCH2Up 49
+#define SWITCH3Up 50
+#define SWITCH4Up 51
+#define SWITCH5Up 52
+#define SWITCH6Up 53
+
+#define SWITCH1Down 54
+#define SWITCH2Down 55
+#define SWITCH3Down 56
+#define SWITCH4Down 57
+#define SWITCH5Down 58
+#define SWITCH6Down 59
+
+
+// Set the pins on the I2C chip used for LCD connections (Some LCD use Address 0x27 and others use 0x3F):
+//LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, 1);  // Set the LCD I2C address (addr, en, rw, rs, d4, d5, d6, d7, backlight, polarity)
+LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 20 chars and 4 line display
+
+
+bool button1;
+bool button2;
+bool button3;
+bool button4;
+bool button5;
+
+bool bluetooth_On;
+bool showDataOnDisplay;
+
+bool switch1Up;
+bool switch2Up;
+bool switch3Up;
+bool switch4Up;
+bool switch5Up;
+bool switch6Up;
+
+bool switch1Down;
+bool switch2Down;
+bool switch3Down;
+bool switch4Down;
+bool switch5Down;
+bool switch6Down;
+
+
+int rightJoystick_X;
+int rightJoystick_Y;
+int leftJoystick_X;
+int leftJoystick_Y;
+
+String count;
+
+struct SEND_DATA_STRUCTURE{
+  //put your variable definitions here for the data you want to send
+  //THIS MUST BE EXACTLY THE SAME ON THE OTHER ARDUINO
+  
+    bool menuDown;      
+    bool Select; 
+    bool menuUp;  
+    bool toggleBottom;  
+    bool toggleTop; 
+    int mode;  
+
+    int16_t thumb_fingertip;
+    int16_t thumb_knuckle_left;
+    int16_t thumb_knuckle_right;
+
+    int16_t index_finger_fingertip;
+    int16_t index_finger_knuckle_left;
+    int16_t index_finger_knuckle_right;
+
+    int16_t middle_finger_fingertip;
+    int16_t middle_finger_knuckle_left;
+    int16_t middle_finger_knuckle_right;
+    
+    int16_t ring_finger_fingertip;
+    int16_t ring_finger_knuckle_left;
+    int16_t ring_finger_knuckle_right;
+
+    int16_t pinky_fingertip;
+    int16_t pinky_knuckle_left;
+    int16_t pinky_knuckle_right;
+
+};
+
+struct RECEIVE_DATA_STRUCTURE_REMOTE{
+  //put your variable definitions here for the data you want to receive
+  //THIS MUST BE EXACTLY THE SAME ON THE OTHER ARDUINO
+  int16_t mode;
+  int16_t count;
+};
+
+SEND_DATA_STRUCTURE mydata_send;
+RECEIVE_DATA_STRUCTURE_REMOTE mydata_remote;
+
+int state; // BT state
+int previous_state;
+
+unsigned long previousMillis = 0;
+const long interval = 500;
+
+unsigned long previousDispMillis = 0;
+const long Dispinterval = 10;
+
+//------------setup()--------------------------------------
+void setup() {
+
+  lcd.begin(20,4);   // Initialize the lcd for 20 chars 4 lines, turn on backlight
+
+  Serial.begin(57600);
+  Serial2.begin(57600);
+
+  ET1.begin(details(mydata_send), &Serial2);
+  ET2.begin(details(mydata_remote), &Serial2);
+
+  // NOTE: Cursor Position: (CHAR, LINE) starts at 0  
+  lcd.backlight();
+  lcd.setCursor(0,0);
+  lcd.print("  Remote Controller ");
+  lcd.setCursor(0,1);
+  lcd.print(" andrejovaRobotika. ");
+  lcd.setCursor(0,2);
+  lcd.print("     blogspot.sk    ");
+  
+  pinMode(BUTTON1, INPUT_PULLUP);
+  pinMode(BUTTON2, INPUT_PULLUP);
+  pinMode(BUTTON3, INPUT_PULLUP);
+  pinMode(BUTTON4, INPUT_PULLUP);
+  pinMode(BUTTON5, INPUT_PULLUP);
+  //pinMode(52, INPUT_PULLUP);
+  
+  pinMode(BLUETOOTH_SWITCH, INPUT_PULLUP);
+  pinMode(DISPLAY_SWITCH, INPUT_PULLUP);
+  
+  pinMode(SWITCH1Up, INPUT_PULLUP);
+  pinMode(SWITCH2Up, INPUT_PULLUP);
+  pinMode(SWITCH3Up, INPUT_PULLUP);
+  pinMode(SWITCH4Up, INPUT_PULLUP);
+  pinMode(SWITCH5Up, INPUT_PULLUP);
+  pinMode(SWITCH6Up, INPUT_PULLUP);
+
+  pinMode(SWITCH1Down, INPUT_PULLUP);
+  pinMode(SWITCH2Down, INPUT_PULLUP);
+  pinMode(SWITCH3Down, INPUT_PULLUP);
+  pinMode(SWITCH4Down, INPUT_PULLUP);
+  pinMode(SWITCH5Down, INPUT_PULLUP);
+  pinMode(SWITCH6Down, INPUT_PULLUP);
+
+  pinMode(A0, INPUT);
+  pinMode(A1, INPUT);
+  pinMode(A2, INPUT);
+  pinMode(A3, INPUT);
+
+  pinMode(3, INPUT); // BT state
+
+  digitalWrite(2, LOW); // turn off LED
+  previous_state = 0;
+  delay(1000);
+  lcd.clear();
+}
+//----------------------------end of setup()------------------------------------
+
+
+
+//----------------------pair()--------------------------------------------------
+void pair() {
+    state = digitalRead(3);
+    while(state == 0) {
+        lcd.setCursor(0,3);
+        lcd.print("Waiting to Pair BT  ");
+        //lcd.setCursor(0,3);
+        //lcd.print("               ");
+        previous_state = state;
+        state = digitalRead(3);    
+    }
+
+    delay(500);  // wait before sending data
+}
+//-----------------end of pair-------------------------------------
+
+//-----------------loop-------------------------------------------
+void loop() {
+  
+ unsigned long currentMillis = millis();
+ if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
+    previousMillis = currentMillis;
+    
+  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
+  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
+  Serial.print("bluetooth_On = "+ String(bluetooth_On));
+  Serial.print("showDataOnDisplay = "+ String(showDataOnDisplay));
+   
+  if(bluetooth_On) {
+    // check to see if BT is paired
+    previous_state = state;
+    state = digitalRead(3);
+    if (state == 0) {
+      pair();
+    }
+    else {
+      if (previous_state==0) {
+        lcd.setCursor(0,3);
+        lcd.print(" BT Paired to Robot ");
+      }
+    }
+  } else {
+    if (showDataOnDisplay) {
+      lcd.setCursor(0,3);
+      lcd.print(" BT:"+String(bluetooth_On)+  ", Displ:"+String(showDataOnDisplay));
+    }
+  }// end of if bluetooth_On
+
+
+  button1 =  digitalRead(BUTTON1);
+  button2 =  digitalRead(BUTTON2);
+  button3 =  digitalRead(BUTTON3);
+  button4 =  digitalRead(BUTTON4);
+  button5 =  digitalRead(BUTTON5);
+
+
+  if (button1 == 0) {
+    mydata_send.menuDown = 1;
+  } else {
+    mydata_send.menuDown = 0;
+  }
+
+  if (button2 == 0) {
+    mydata_send.Select = 1;
+  } else {
+    mydata_send.Select = 0;
+  }
+
+  if (button3 == 0) {
+    mydata_send.menuUp = 1;
+  } else {
+    mydata_send.menuUp = 0;
+  }
+
+  if (button4 == 0) {
+    mydata_send.toggleBottom = 1;
+  }else {
+    mydata_send.toggleBottom = 0;
+  }
+
+  if (button5 == 0) {
+    mydata_send.toggleTop = 1;
+  } else {
+    mydata_send.toggleTop = 0;
+  }
+
+  leftJoystick_X = analogRead(A0);
+  leftJoystick_Y = analogRead(A1);
+  rightJoystick_X = analogRead(A2);
+  rightJoystick_Y = analogRead(A3);
+
+  mydata_send.index_finger_fingertip = rightJoystick_X;
+  mydata_send.index_finger_knuckle_left = rightJoystick_Y;
+  mydata_send.index_finger_knuckle_right = leftJoystick_X;
+  mydata_send.pinky_knuckle_right = leftJoystick_Y;
+
+  if(bluetooth_On){
+    ET1.sendData();
+  }
+  
+  if(showDataOnDisplay){
+    lcd.setCursor(0,0);
+    lcd.print("LX:"+String(leftJoystick_X)+", RX:"+String(rightJoystick_X)+"  ");
+    lcd.setCursor(0,1);
+    lcd.print("LY:"+String(leftJoystick_Y)+",  RY:"+String(rightJoystick_Y)+"  ");
+  }
+  
+ } // end of timed event send
+
+if (currentMillis - previousDispMillis >= Dispinterval) {  // start timed event for read and send
+  previousDispMillis = currentMillis;  
+  if(bluetooth_On) {
+        if(ET2.receiveData()){
+          count = String(mydata_remote.count);
+          lcd.setCursor(0,3);
+          lcd.print(count);
+
+          if (mydata_remote.mode == 0) {
+            lcd.setCursor(0,0);
+            lcd.print("Mode 0 - Kin Test   ");
+            lcd.setCursor(0,1);
+            lcd.print("                    ");
+          }
+          else if (mydata_remote.mode == 1) {
+            lcd.setCursor(0,0);
+            lcd.print("Mode 1 - Walk #1    ");
+            lcd.setCursor(0,1);
+            lcd.print("                    ");
+          }
+          else if (mydata_remote.mode == 2) {
+            lcd.setCursor(0,0);
+            lcd.print("Mode 2 -            ");
+            lcd.setCursor(0,1);
+            lcd.print("                    ");
+          }
+          else if (mydata_remote.mode == 3) {
+            lcd.setCursor(0,0);
+            lcd.print("Mode 3 -            ");
+            lcd.setCursor(0,1);
+            lcd.print("                    ");
+          }
+          else if (mydata_remote.mode == 4) {
+            lcd.setCursor(0,0);
+            lcd.print("Mode 4 -            ");
+            lcd.setCursor(0,1);
+            lcd.print("                    ");
+          }
+          else if (mydata_remote.mode == 5) {
+            lcd.setCursor(0,0);
+            lcd.print("Mode 5 -            ");
+            lcd.setCursor(0,1);
+            lcd.print("                    ");
+          }
+          
+
+        } //end of if ET.receivedData()
+    }// end of if bluetooth_On
+        
+}  // end of second timed event
+
+
+
+
+
+
+}
