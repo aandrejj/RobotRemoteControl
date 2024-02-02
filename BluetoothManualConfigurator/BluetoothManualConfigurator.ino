@@ -104,6 +104,11 @@ HMSoft V005
 
 AT+NAME?
 
+AT+RESET Restarts the module.
+AT+RENEW Restores the default factory settings.
+AT+IMME? Query the start mode
+
+
 */
 
 
@@ -130,6 +135,11 @@ void setup() {
   // Start serial communications.
   // The baud rate must be the same for both the serial and the bluetooth.
   Serial.begin(Baud, SERIAL_8N1);
+  Serial.println(" ");
+  Serial.print("Sketch:   ");   Serial.println(__FILE__);
+  Serial.print("Uploaded: ");   Serial.println(__DATE__);
+  Serial.println(" ");
+
   bluetooth.begin(BTBaud);
   Serial.println("Bluetooth available.");
 }
