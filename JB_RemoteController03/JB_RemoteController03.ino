@@ -68,6 +68,11 @@ bool button4;
 bool button5;
 
 bool bluetooth_On;
+bool previous_Bluetooth_State;
+bool bluetooth_initialized;
+bool bluetooth_connecting;
+bool bluetooth_connected;
+
 bool showDataOnDisplay;
 
 bool switch1Up;
@@ -159,37 +164,22 @@ void setup() {
   Serial.print("Sketch:   ");   Serial.println(__FILE__);
   Serial.print("Uploaded: ");   Serial.println(__DATE__);
 
+  bluetooth_initialized = false;
+  previous_Bluetooth_State = false;
+  bluetooth_connecting = false;
+  bluetooth_connected = false;
+
   bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
   showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
   Serial.print("bluetooth_On = "+ String(bluetooth_On));
   Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
    
   if(bluetooth_On) {
-    Serial.println("Bluetooth initialisation....");
-    // Setup BT module
-    pinMode(BLUETOOTH_TX, INPUT);
-    pinMode(BLUETOOTH_RX, OUTPUT);  
-    pinMode(STATE, INPUT);
-    //pinMode(GND, OUTPUT);
-    //pinMode(Vcc, OUTPUT);
-    pinMode(ENABLE, OUTPUT);
-    //digitalWrite(GND, LOW);       // Ground for BLE Module
-    //digitalWrite(Vcc, HIGH);      // Vcc for BLE Module
-    #ifdef EN_PIN_HIGH  
-      digitalWrite(ENABLE, HIGH);   // Used to force AT-mode for HC-05. More flexible is to press the button on the pcb
-    #endif
-
-    Serial.println("Bluetooth available.");
-    
-    //Serial2.begin(Baud);
-    bluetooth.begin(BTBaud);
-
-    //ET1.begin(details(mydata_send), &Serial2);
-    //ET2.begin(details(mydata_remote), &Serial2);
-    ET1.begin(details(mydata_send), &bluetooth);
-    ET2.begin(details(mydata_remote), &bluetooth);
-
+    //Serial.println("Bluetooth initialisation....");
+    BtConnect();
+    //Serial.println("Bluetooth available.");
   }
+  //previous_Bluetooth_State = bluetooth_On;
 
   // NOTE: Cursor Position: (CHAR, LINE) starts at 0  
   lcd.backlight();
@@ -242,11 +232,30 @@ void setup() {
 //----------------------------end of setup()------------------------------------
 //----------------------------BtConnect-----------------------------------------
 void BtConnect() {
+    Serial.println("Bluetooth initialization....");
 
+    // Setup BT module
+    pinMode(BLUETOOTH_TX, INPUT);
+    pinMode(BLUETOOTH_RX, OUTPUT);  
+    pinMode(STATE, INPUT);
+    //pinMode(GND, OUTPUT);
+    //pinMode(Vcc, OUTPUT);
+    pinMode(ENABLE, OUTPUT);
+    //digitalWrite(GND, LOW);       // Ground for BLE Module
+    //digitalWrite(Vcc, HIGH);      // Vcc for BLE Module
+    #ifdef EN_PIN_HIGH  
+      digitalWrite(ENABLE, HIGH);   // Used to force AT-mode for HC-05. More flexible is to press the button on the pcb
+    #endif
+    
+    //Serial2.begin(Baud);
+    bluetooth.begin(BTBaud);
     //ET1.begin(details(mydata_send), &Serial2);
     //ET2.begin(details(mydata_remote), &Serial2);
     ET1.begin(details(mydata_send), &bluetooth);
     ET2.begin(details(mydata_remote), &bluetooth);
+    bluetooth_initialized = true;
+    Serial.println("Bluetooth available.");
+    previous_Bluetooth_State = bluetooth_On;
     
 }
 //----------------------------end of BtConnect----------------------------------
@@ -269,9 +278,6 @@ void pair() {
 
 //------------------BtWriteEvent-------------------------------------
 void BtWriteEvent() {
-    bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
-    showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
-
     if (Serial.available()) {
       Serial.print("bluetooth_On = "+ String(bluetooth_On));
       Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
@@ -410,6 +416,27 @@ void BtReadEvent() {
 
 //-------------------------loop------------------------------------------------
 void loop() {
+  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
+  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
+  button3 =  digitalRead(BUTTON3);
+
+  if((!previous_Bluetooth_State) && (bluetooth_On)) {
+    BtConnect();
+  }
+  
+  if(bluetooth_On && bluetooth_initialized) {
+    if(button3) {
+      if(showDataOnDisplay) {
+        lcd.setCursor(0,3);
+        lcd.print("Bluetooth: Connecting...");
+        bluetooth_connecting = true;
+      }
+    }
+    if (bluetooth_connecting) {
+      
+    }
+  }
+
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
     previousMillis = currentMillis;
