@@ -1,5 +1,7 @@
 #include "EasyTransfer.h"
 #include "SoftwareSerial.h"
+#include "JB_RemoteController.h"
+#include "RemoteController_dataStructures.h"
 
 //create object
 EasyTransfer ET1;   // send serial
@@ -8,50 +10,7 @@ EasyTransfer ET2;   // rec serial
 #include "Wire.h"  // Comes with Arduino IDE
 #include "LiquidCrystal_I2C.h"
 
-#define BUTTON1 3
-#define BUTTON2 4
-#define BUTTON3 5
-#define BUTTON4 33
-#define BUTTON5 32
 
-#define BLUETOOTH_SWITCH 35
-#define DISPLAY_SWITCH 30
-
-#define SWITCH1Up 20
-#define SWITCH2Up 49
-#define SWITCH3Up 50
-#define SWITCH4Up 51
-#define SWITCH5Up 52
-#define SWITCH6Up 53
-
-#define SWITCH1Down 54
-#define SWITCH2Down 55
-#define SWITCH3Down 56
-#define SWITCH4Down 57
-#define SWITCH5Down 58
-#define SWITCH6Down 59
-
-#define IS_HM_10 //uncomment this if module is HM-10
-
-// Outcomment line below for HM-10, HM-19 etc
-//#define HIGHSPEED   // Most modules are only 9600, although you can reconfigure this
-#define EN_PIN_HIGH   // You can use this for HC-05 so you don't have to hold the small button on power-up to get to AT-mode
-
-#ifdef HIGHSPEED
-  #define Baud 38400   // Serial monitor
-  #define BTBaud 38400 // There is only one speed for configuring HC-05, and that is 38400.
-#else
-  #define Baud 9600    // Serial monitor
-  #define BTBaud 9600  // HM-10, HM-19 etc
-#endif
-
-
-#define STATE 11
-#define BLUETOOTH_RX 9  // Bluetooth RX -> Arduino D9
-#define BLUETOOTH_TX 10 // Bluetooth TX -> Arduino D10
-//#define GND 13
-//#define Vcc 12
-#define ENABLE 8
 
 boolean NL = true;
 
@@ -61,81 +20,6 @@ bool newDataReceived;
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 20 chars and 4 line display
 
 
-bool button1;
-bool button2;
-bool button3;
-bool button4;
-bool button5;
-
-bool bluetooth_On;
-bool previous_Bluetooth_State;
-bool bluetooth_initialized;
-bool bluetooth_connecting;
-bool bluetooth_connected;
-
-bool showDataOnDisplay;
-
-bool switch1Up;
-bool switch2Up;
-bool switch3Up;
-bool switch4Up;
-bool switch5Up;
-bool switch6Up;
-
-bool switch1Down;
-bool switch2Down;
-bool switch3Down;
-bool switch4Down;
-bool switch5Down;
-bool switch6Down;
-
-
-int rightJoystick_X;
-int rightJoystick_Y;
-int leftJoystick_X;
-int leftJoystick_Y;
-
-String count;
-
-struct SEND_DATA_STRUCTURE{
-  //put your variable definitions here for the data you want to send
-  //THIS MUST BE EXACTLY THE SAME ON THE OTHER ARDUINO
-  
-    bool menuDown;      
-    bool Select; 
-    bool menuUp;  
-    bool toggleBottom;  
-    bool toggleTop; 
-    int mode;  
-
-    int16_t thumb_fingertip;
-    int16_t thumb_knuckle_left;
-    int16_t thumb_knuckle_right;
-
-    int16_t index_finger_fingertip;
-    int16_t index_finger_knuckle_left;
-    int16_t index_finger_knuckle_right;
-
-    int16_t middle_finger_fingertip;
-    int16_t middle_finger_knuckle_left;
-    int16_t middle_finger_knuckle_right;
-    
-    int16_t ring_finger_fingertip;
-    int16_t ring_finger_knuckle_left;
-    int16_t ring_finger_knuckle_right;
-
-    int16_t pinky_fingertip;
-    int16_t pinky_knuckle_left;
-    int16_t pinky_knuckle_right;
-
-};
-
-struct RECEIVE_DATA_STRUCTURE_REMOTE{
-  //put your variable definitions here for the data you want to receive
-  //THIS MUST BE EXACTLY THE SAME ON THE OTHER ARDUINO
-  int16_t mode;
-  int16_t count;
-};
 
 SEND_DATA_STRUCTURE mydata_send;
 RECEIVE_DATA_STRUCTURE_REMOTE mydata_remote;
@@ -262,22 +146,56 @@ void BT_to_serial_prepare() {
 
 //----------------------pair()--------------------------------------------------
 void pair() {
+  Serial.println("pair: started");
     state = digitalRead(STATE);
+    Serial.println("pair: state =" + String(state));
     while(state == 0) {
         lcd.setCursor(0,3);
-        lcd.print("Waiting to Pair BT  ");
+        lcd.print("Waiting to PairBT");
         //lcd.setCursor(0,3);
         //lcd.print("               ");
         previous_state = state;
-        state = digitalRead(STATE);    
+        state = digitalRead(STATE);
+        lcd.print(", "+String(state));
     }
 
     delay(500);  // wait before sending data
+    Serial.println("pair: End. State@end = "+String(state));
 }
 //-----------------end of pair-------------------------------------
 
+unsigned long milisOfLastStateChanged;
+unsigned long maxTimeOfNoChangeMillis = 1500;
+unsigned long  currentStateDuration;
+bool LedIsBlinking = true;
+bool BtLedIsSteadyOn = false;
+
+//-----------------------Bt_state_checker----------------------------------------------
+bool Bt_state_checker(unsigned long currentMillis, bool previousState, bool newState) {
+  if(previousState!=newState) {
+    milisOfLastStateChanged = currentMillis;
+    LedIsBlinking = true;
+    BtLedIsSteadyOn = false;
+  } else {
+    currentStateDuration = currentMillis - milisOfLastStateChanged;
+    if(currentStateDuration > maxTimeOfNoChangeMillis) {
+      LedIsBlinking = false;
+      if(newState) {
+        BtLedIsSteadyOn = true;
+      } else {
+        BtLedIsSteadyOn = false;
+      }
+    } else {
+      LedIsBlinking = true;
+      BtLedIsSteadyOn = false;
+    }
+  }
+  return BtLedIsSteadyOn;
+}
+//-----------------------Bt_state_checker----------------------------------------------
+bool bt_State = false;
 //------------------BtWriteEvent-------------------------------------
-void BtWriteEvent() {
+void BtWriteEvent(unsigned long currentMillis) {
     if (Serial.available()) {
       Serial.print("bluetooth_On = "+ String(bluetooth_On));
       Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
@@ -285,17 +203,26 @@ void BtWriteEvent() {
    
     if(bluetooth_On) {
       // check to see if BT is paired
-      previous_state = state;
       state = digitalRead(STATE);
 
-      if (state == 0) {
+      bt_State = Bt_state_checker(currentMillis, previous_state, state);
+
+      previous_state = state;
+
+      if (!bt_State) {
+          if(showDataOnDisplay) {
+            //lcd.setCursor(0,3);
+            //lcd.print(" BT connecting.. ");
+          }
+          //Serial.println("BT connecting...");
         //pair();
       }
       else {
-        if (previous_state==0) {
-          lcd.setCursor(0,3);
-          lcd.print(" BT Paired to Robot ");
-        }
+          if(showDataOnDisplay) {
+            lcd.setCursor(0,3);
+            lcd.print(" BT Paired to Robot ");
+          }
+          Serial.println("BT Paired to Robot");
       }
     } else {
       if (showDataOnDisplay) {
@@ -342,12 +269,24 @@ void loop() {
   }
   
   if(bluetooth_On && bluetooth_initialized) {
-    if(button3) {
+    if(!button3) {
       if(showDataOnDisplay) {
         lcd.setCursor(0,3);
-        lcd.print("Bluetooth: Connecting...");
+        lcd.print("BT Connecting...");
+        Serial.println("BT Connecting...");
         bluetooth_connecting = true;
       }
+    }
+
+    if(bluetooth_connecting) {
+
+    } else {
+        if(showDataOnDisplay) {
+        lcd.setCursor(0,3);
+        lcd.print("Ready to connect");
+        Serial.println("BT Ready to connect");
+    }
+
     }
     if (bluetooth_connecting) {
       
@@ -358,7 +297,7 @@ void loop() {
   if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
     previousMillis = currentMillis;
     ReadHwData();
-    BtWriteEvent();
+    BtWriteEvent(currentMillis);
   } // end of timed event send
 
   if (currentMillis - previousDispMillis >= Dispinterval) {  // start timed event for read
