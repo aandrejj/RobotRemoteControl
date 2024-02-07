@@ -55,6 +55,7 @@ EasyTransfer ET2;   // rec serial
 
 boolean NL = true;
 
+bool newDataReceived;
 
 // Set the pins on the I2C chip used for LCD connections (Some LCD use Address 0x27 and others use 0x3F):
 //LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, 1);  // Set the LCD I2C address (addr, en, rw, rs, d4, d5, d6, d7, backlight, polarity)
@@ -289,7 +290,7 @@ void BtWriteEvent() {
       state = digitalRead(STATE);
 
       if (state == 0) {
-        pair();
+        //pair();
       }
       else {
         if (previous_state==0) {
@@ -304,6 +305,88 @@ void BtWriteEvent() {
       }
     }// end of if bluetooth_On
 
+    if(bluetooth_On){
+      ET1.sendData();
+    }
+    
+    if(showDataOnDisplay){
+      lcd.setCursor(0,0);
+      lcd.print("LX:"+String(leftJoystick_X)+", RX:"+String(rightJoystick_X)+"  ");
+      lcd.setCursor(0,1);
+      lcd.print("LY:"+String(leftJoystick_Y)+",  RY:"+String(rightJoystick_Y)+"  ");
+      lcd.setCursor(0,2);
+      lcd.print("Buttons:"+String(button1)+" "+String(button2)+" "+String(button3)+" "+String(button4)+" "+String(button5));
+    }
+}
+//------------------end of BtWriteEvnet-------------------------------------
+
+//------------------BtReadEvent-------------------------------------------
+bool BtReadEvent() {
+  bool _newDataReceived = false;
+    if(bluetooth_On) {
+      if(ET2.receiveData()){
+        _newDataReceived = true;
+      } //end of if ET.receivedData()
+    }// end of if bluetooth_On          
+    return _newDataReceived;
+}
+//------------------end of BtReadEvent-------------------------------------------
+
+//-------------------------loop------------------------------------------------
+void loop() {
+  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
+  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
+  button3 =  digitalRead(BUTTON3);
+
+  if((!previous_Bluetooth_State) && (bluetooth_On)) {
+    BtConnect();
+  }
+  
+  if(bluetooth_On && bluetooth_initialized) {
+    if(button3) {
+      if(showDataOnDisplay) {
+        lcd.setCursor(0,3);
+        lcd.print("Bluetooth: Connecting...");
+        bluetooth_connecting = true;
+      }
+    }
+    if (bluetooth_connecting) {
+      
+    }
+  }
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
+    previousMillis = currentMillis;
+    ReadHwData();
+    BtWriteEvent();
+  } // end of timed event send
+
+  if (currentMillis - previousDispMillis >= Dispinterval) {  // start timed event for read
+    previousDispMillis = currentMillis;  
+    newDataReceived = BtReadEvent();
+    if(newDataReceived) {
+      ShowDataOnDisplay();
+    }
+  }  // end of second timed event
+}
+//-----------------end of loop-----------------------------------------
+//-----------------end of loop-----------------------------------------
+//-----------------end of loop-----------------------------------------
+//-----------------end of loop-----------------------------------------
+//-----------------end of loop-----------------------------------------
+//-----------------end of loop-----------------------------------------
+//-----------------end of loop-----------------------------------------
+//-----------------end of loop-----------------------------------------
+//-----------------end of loop-----------------------------------------
+
+
+
+
+
+
+//--------------ReadHwData-------------------------------------------
+void ReadHwData() {
     button1 =  digitalRead(BUTTON1);
     button2 =  digitalRead(BUTTON2);
     button3 =  digitalRead(BUTTON3);
@@ -350,25 +433,12 @@ void BtWriteEvent() {
     mydata_send.index_finger_knuckle_right = leftJoystick_X;
     mydata_send.pinky_knuckle_right = leftJoystick_Y;
 
-    if(bluetooth_On){
-      ET1.sendData();
-    }
-    
-    if(showDataOnDisplay){
-      lcd.setCursor(0,0);
-      lcd.print("LX:"+String(leftJoystick_X)+", RX:"+String(rightJoystick_X)+"  ");
-      lcd.setCursor(0,1);
-      lcd.print("LY:"+String(leftJoystick_Y)+",  RY:"+String(rightJoystick_Y)+"  ");
-      lcd.setCursor(0,2);
-      lcd.print("Buttons:"+String(button1)+" "+String(button2)+" "+String(button3)+" "+String(button4)+" "+String(button5));
-    }
-}
-//------------------end of BtWriteEvnet-------------------------------------
 
-//------------------BtReadEvent-------------------------------------------
-void BtReadEvent() {
-    if(bluetooth_On) {
-      if(ET2.receiveData()){
+}
+//--------------end of ReadHwData------------------------------------
+
+//---------------------ShowDataOnDisplay----------------------------------------
+void ShowDataOnDisplay() {
         count = String(mydata_remote.count);
         lcd.setCursor(0,3);
         lcd.print(count);
@@ -409,43 +479,7 @@ void BtReadEvent() {
           lcd.setCursor(0,1);
           lcd.print("                    ");
         }
-      } //end of if ET.receivedData()
-    }// end of if bluetooth_On          
+
 }
-//------------------end of BtReadEvent-------------------------------------------
+//----------------------end of ShowDataOnDisplay--------------------------------
 
-//-------------------------loop------------------------------------------------
-void loop() {
-  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
-  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
-  button3 =  digitalRead(BUTTON3);
-
-  if((!previous_Bluetooth_State) && (bluetooth_On)) {
-    BtConnect();
-  }
-  
-  if(bluetooth_On && bluetooth_initialized) {
-    if(button3) {
-      if(showDataOnDisplay) {
-        lcd.setCursor(0,3);
-        lcd.print("Bluetooth: Connecting...");
-        bluetooth_connecting = true;
-      }
-    }
-    if (bluetooth_connecting) {
-      
-    }
-  }
-
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
-    previousMillis = currentMillis;
-    BtWriteEvent();
-  } // end of timed event send
-
-  if (currentMillis - previousDispMillis >= Dispinterval) {  // start timed event for read
-    previousDispMillis = currentMillis;  
-    BtReadEvent();
-  }  // end of second timed event
-}
-//-----------------end of loop-----------------------------------------
