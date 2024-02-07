@@ -58,7 +58,6 @@ boolean NL = true;
 bool newDataReceived;
 
 // Set the pins on the I2C chip used for LCD connections (Some LCD use Address 0x27 and others use 0x3F):
-//LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, 1);  // Set the LCD I2C address (addr, en, rw, rs, d4, d5, d6, d7, backlight, polarity)
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 20 chars and 4 line display
 
 
@@ -177,7 +176,7 @@ void setup() {
    
   if(bluetooth_On) {
     //Serial.println("Bluetooth initialisation....");
-    BtConnect();
+    BT_to_serial_prepare();
     //Serial.println("Bluetooth available.");
   }
   //previous_Bluetooth_State = bluetooth_On;
@@ -231,8 +230,8 @@ void setup() {
   lcd.clear();
 }
 //----------------------------end of setup()------------------------------------
-//----------------------------BtConnect-----------------------------------------
-void BtConnect() {
+//----------------------------BT_to_serial_prepare-----------------------------------------
+void BT_to_serial_prepare() {
     Serial.println("Bluetooth initialization....");
 
     // Setup BT module
@@ -259,7 +258,7 @@ void BtConnect() {
     previous_Bluetooth_State = bluetooth_On;
     
 }
-//----------------------------end of BtConnect----------------------------------
+//----------------------------end of BT_to_serial_prepare----------------------------------
 
 //----------------------pair()--------------------------------------------------
 void pair() {
@@ -339,7 +338,7 @@ void loop() {
   button3 =  digitalRead(BUTTON3);
 
   if((!previous_Bluetooth_State) && (bluetooth_On)) {
-    BtConnect();
+    BT_to_serial_prepare();
   }
   
   if(bluetooth_On && bluetooth_initialized) {
