@@ -60,7 +60,9 @@ void setup() {
    
   if(bluetooth_On) {
     //Serial.println("Bluetooth initialisation....");
+
     BT_to_serial_prepare();
+
     //Serial.println("Bluetooth available.");
   }
   //previous_Bluetooth_State = bluetooth_On;
@@ -116,6 +118,7 @@ void setup() {
 //----------------------------end of setup()------------------------------------
 //----------------------------BT_to_serial_prepare-----------------------------------------
 void BT_to_serial_prepare() {
+
     Serial.println("Bluetooth initialization....");
 
     // Setup BT module
@@ -195,7 +198,9 @@ bool Bt_state_checker(unsigned long currentMillis, bool previousState, bool newS
 //-----------------------Bt_state_checker----------------------------------------------
 bool bt_State = false;
 //------------------BtWriteEvent-------------------------------------
+
 void BtWriteEvent(unsigned long currentMillis) {
+
     if (Serial.available()) {
       Serial.print("bluetooth_On = "+ String(bluetooth_On));
       Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
@@ -418,6 +423,40 @@ void ShowDataOnDisplay() {
           lcd.print("                    ");
         }
 
+
+//-------------------------loop------------------------------------------------
+void loop() {
+  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
+  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
+  button3 =  digitalRead(BUTTON3);
+
+  if((!previous_Bluetooth_State) && (bluetooth_On)) {
+    BtConnect();
+  }
+  
+  if(bluetooth_On && bluetooth_initialized) {
+    if(button3) {
+      if(showDataOnDisplay) {
+        lcd.setCursor(0,3);
+        lcd.print("Bluetooth: Connecting...");
+        bluetooth_connecting = true;
+      }
+    }
+    if (bluetooth_connecting) {
+      
+    }
+  }
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
+    previousMillis = currentMillis;
+    BtWriteEvent();
+  } // end of timed event send
+
+  if (currentMillis - previousDispMillis >= Dispinterval) {  // start timed event for read
+    previousDispMillis = currentMillis;  
+    BtReadEvent();
+  }  // end of second timed event
 }
 //----------------------end of ShowDataOnDisplay--------------------------------
 
