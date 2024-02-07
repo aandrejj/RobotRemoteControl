@@ -79,3 +79,5 @@ int leftJoystick_X;
 int leftJoystick_Y;
 
 String count;
+
+String lcdString0, lcdString1, lcdString2, lcdString3; 

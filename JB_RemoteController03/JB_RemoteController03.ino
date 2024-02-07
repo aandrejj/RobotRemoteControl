@@ -176,7 +176,26 @@ void pair_async(unsigned long currentMillis)
         
         // Echo the user input to the main window. 
         // If there is a new line print the ">" character.
-        if (NL) { Serial.print("\r\n>");  NL = false; lcd.println();}
+        if (NL) { 
+            Serial.print("\r\n>");  
+            NL = false; 
+            //lcd.println();
+            lcdString0 = lcdString1;
+            lcd.setCursor(0,0);
+            lcd.print(lcdString0 );
+
+            lcdString1 = lcdString2;
+            lcd.setCursor(0,1);
+            lcd.print(lcdString1 );
+            
+            lcdString2 = lcdString3;
+            lcd.setCursor(0,2);
+            lcd.print(lcdString2 );
+            
+            lcdString3="";
+            lcd.setCursor(0,3);
+            lcd.print(lcdString3 );
+          }
         
         Serial.print(c);
         lcd.print(c);
@@ -332,6 +351,7 @@ void loop() {
         Serial.println("BT Connecting...");
         bluetooth_connecting = true;
         lcd.clear();
+        lcdString0=""; lcdString1=""; lcdString2=""; lcdString3="";
         lcd.setCursor(0,0);
         lcd.print("BT manual connecting");
       }
