@@ -54,6 +54,7 @@ bool previous_Bluetooth_State;
 bool bluetooth_initialized;
 bool bluetooth_connecting;
 bool bluetooth_connected;
+//bool bt_State;
 
 bool showDataOnDisplay;
 

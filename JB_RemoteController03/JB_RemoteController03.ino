@@ -13,6 +13,7 @@ EasyTransfer ET2;   // rec serial
 
 
 boolean NL = true;
+bool bt_State = false;
 
 bool newDataReceived;
 
@@ -146,7 +147,53 @@ void BT_to_serial_prepare() {
     
 }
 //----------------------------end of BT_to_serial_prepare----------------------------------
+//--------------------------------pair_async-----------------------------------------------
+void pair_async(unsigned long currentMillis)
+{
+  //Serial.println("pair_async:start");
+  // From BT-->Serial
+  while (bluetooth.available()) {
+    c = bluetooth.read();
+    //Serial.print("Rec'"+String(c)+"'"); 
+    Serial.print(c);
+    lcd.print(c);
+  }
+  
+  // From Serial-->BT
+  if (Serial.available()) {
+    while (Serial.available()) {
+      c = Serial.read();
+      //Serial.print("Send'"+String(c)+"'");
+      
 
+      #ifdef IS_HM_10
+      // do not send line end characters to the HM-10
+        if (c!=10 & c!=13 ) 
+        {  
+             bluetooth.write(c);
+             //lcd.print(c);
+        }
+        
+        // Echo the user input to the main window. 
+        // If there is a new line print the ">" character.
+        if (NL) { Serial.print("\r\n>");  NL = false; lcd.println();}
+        
+        Serial.print(c);
+        lcd.print(c);
+        
+        if (c==10) { NL = true; }
+      #else
+        Serial.print(c);
+        lcd.print(c);
+        bluetooth.write(c);
+      #endif
+      
+    }
+  }
+  //delay(100);
+  bt_State = Bt_state_checker(currentMillis, previous_state, state);
+}
+//-----------------------------end of pair_async-------------------------------------------
 //----------------------pair()--------------------------------------------------
 void pair() {
   Serial.println("pair: started");
@@ -196,7 +243,7 @@ bool Bt_state_checker(unsigned long currentMillis, bool previousState, bool newS
   return BtLedIsSteadyOn;
 }
 //-----------------------Bt_state_checker----------------------------------------------
-bool bt_State = false;
+
 //------------------BtWriteEvent-------------------------------------
 
 void BtWriteEvent(unsigned long currentMillis) {
@@ -241,12 +288,14 @@ void BtWriteEvent(unsigned long currentMillis) {
     }
     
     if(showDataOnDisplay){
-      lcd.setCursor(0,0);
-      lcd.print("LX:"+String(leftJoystick_X)+", RX:"+String(rightJoystick_X)+"  ");
-      lcd.setCursor(0,1);
-      lcd.print("LY:"+String(leftJoystick_Y)+",  RY:"+String(rightJoystick_Y)+"  ");
-      lcd.setCursor(0,2);
-      lcd.print("Buttons:"+String(button1)+" "+String(button2)+" "+String(button3)+" "+String(button4)+" "+String(button5));
+      if (!bluetooth_connecting) {
+          lcd.setCursor(0,0);
+          lcd.print("LX:"+String(leftJoystick_X)+", RX:"+String(rightJoystick_X)+"  ");
+          lcd.setCursor(0,1);
+          lcd.print("LY:"+String(leftJoystick_Y)+",  RY:"+String(rightJoystick_Y)+"  ");
+          lcd.setCursor(0,2);
+          lcd.print("Buttons:"+String(button1)+" "+String(button2)+" "+String(button3)+" "+String(button4)+" "+String(button5));
+      }
     }
 }
 //------------------end of BtWriteEvnet-------------------------------------
@@ -265,6 +314,8 @@ bool BtReadEvent() {
 
 //-------------------------loop------------------------------------------------
 void loop() {
+
+  unsigned long currentMillis = millis();
   bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
   showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
   button3 =  digitalRead(BUTTON3);
@@ -280,6 +331,9 @@ void loop() {
         lcd.print("BT Connecting...");
         Serial.println("BT Connecting...");
         bluetooth_connecting = true;
+        lcd.clear();
+        lcd.setCursor(0,0);
+        lcd.print("BT manual connecting");
       }
     }
 
@@ -292,13 +346,14 @@ void loop() {
         Serial.println("BT Ready to connect");
     }
 
-    }
+   }
+
+
     if (bluetooth_connecting) {
-      
+      pair_async(currentMillis);
     }
   }
 
-  unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
     previousMillis = currentMillis;
     ReadHwData();
@@ -382,81 +437,47 @@ void ReadHwData() {
 
 //---------------------ShowDataOnDisplay----------------------------------------
 void ShowDataOnDisplay() {
-        count = String(mydata_remote.count);
-        lcd.setCursor(0,3);
-        lcd.print(count);
+  count = String(mydata_remote.count);
+  lcd.setCursor(0,3);
+  lcd.print(count);
 
-        if (mydata_remote.mode == 0) {
-          lcd.setCursor(0,0);
-          lcd.print("Mode 0 - Kin Test   ");
-          lcd.setCursor(0,1);
-          lcd.print("                    ");
-        }
-        else if (mydata_remote.mode == 1) {
-          lcd.setCursor(0,0);
-          lcd.print("Mode 1 - Walk #1    ");
-          lcd.setCursor(0,1);
-          lcd.print("                    ");
-        }
-        else if (mydata_remote.mode == 2) {
-          lcd.setCursor(0,0);
-          lcd.print("Mode 2 -            ");
-          lcd.setCursor(0,1);
-          lcd.print("                    ");
-        }
-        else if (mydata_remote.mode == 3) {
-          lcd.setCursor(0,0);
-          lcd.print("Mode 3 -            ");
-          lcd.setCursor(0,1);
-          lcd.print("                    ");
-        }
-        else if (mydata_remote.mode == 4) {
-          lcd.setCursor(0,0);
-          lcd.print("Mode 4 -            ");
-          lcd.setCursor(0,1);
-          lcd.print("                    ");
-        }
-        else if (mydata_remote.mode == 5) {
-          lcd.setCursor(0,0);
-          lcd.print("Mode 5 -            ");
-          lcd.setCursor(0,1);
-          lcd.print("                    ");
-        }
-
-
-//-------------------------loop------------------------------------------------
-void loop() {
-  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
-  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
-  button3 =  digitalRead(BUTTON3);
-
-  if((!previous_Bluetooth_State) && (bluetooth_On)) {
-    BtConnect();
+  if (mydata_remote.mode == 0) {
+    lcd.setCursor(0,0);
+    lcd.print("Mode 0 - Kin Test   ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
   }
-  
-  if(bluetooth_On && bluetooth_initialized) {
-    if(button3) {
-      if(showDataOnDisplay) {
-        lcd.setCursor(0,3);
-        lcd.print("Bluetooth: Connecting...");
-        bluetooth_connecting = true;
-      }
-    }
-    if (bluetooth_connecting) {
-      
-    }
+  else if (mydata_remote.mode == 1) {
+    lcd.setCursor(0,0);
+    lcd.print("Mode 1 - Walk #1    ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
   }
-
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
-    previousMillis = currentMillis;
-    BtWriteEvent();
-  } // end of timed event send
-
-  if (currentMillis - previousDispMillis >= Dispinterval) {  // start timed event for read
-    previousDispMillis = currentMillis;  
-    BtReadEvent();
-  }  // end of second timed event
+  else if (mydata_remote.mode == 2) {
+    lcd.setCursor(0,0);
+    lcd.print("Mode 2 -            ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+  }
+  else if (mydata_remote.mode == 3) {
+    lcd.setCursor(0,0);
+    lcd.print("Mode 3 -            ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+  }
+  else if (mydata_remote.mode == 4) {
+    lcd.setCursor(0,0);
+    lcd.print("Mode 4 -            ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+  }
+  else if (mydata_remote.mode == 5) {
+    lcd.setCursor(0,0);
+    lcd.print("Mode 5 -            ");
+    lcd.setCursor(0,1);
+    lcd.print("                    ");
+  }
 }
+
 //----------------------end of ShowDataOnDisplay--------------------------------
 
