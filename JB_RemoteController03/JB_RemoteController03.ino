@@ -1,3 +1,10 @@
+/* Encoder Library - Basic Example
+ * http://www.pjrc.com/teensy/td_libs_Encoder.html
+ *
+ * This example code is in the public domain.
+ */
+
+#include <Encoder.h>  //  Encoder Library,  https://github.com/PaulStoffregen/Encoder ,  http://www.pjrc.com/teensy/td_libs_Encoder.html
 #include "EasyTransfer.h"
 #include "SoftwareSerial.h"
 #include "JB_RemoteController.h"
@@ -9,6 +16,8 @@ EasyTransfer ET2;   // rec serial
 
 #include "Wire.h"  // Comes with Arduino IDE
 #include "LiquidCrystal_I2C.h"
+#include "LcdMenu.h"
+#include "utils/commandProccesors.h"
 
 
 
@@ -20,7 +29,15 @@ bool newDataReceived;
 // Set the pins on the I2C chip used for LCD connections (Some LCD use Address 0x27 and others use 0x3F):
 LiquidCrystal_I2C lcd(0x27,20,4);  // set the LCD address to 0x27 for a 20 chars and 4 line display
 
-
+// Change these two numbers to the pins connected to your encoder.
+//   Best Performance: both pins have interrupt capability
+//   Good Performance: only the first pin has interrupt capability
+//   Low Performance:  neither pin has interrupt capability
+Encoder myEnc(ROTARY_ENCODER_PIN1, ROTARY_ENCODER_PIN2);
+//   avoid using pins with LEDs attached
+long oldPosition  = -999;
+long oldEncoderPosition=-999;
+long newEncoderPosition = 0;
 
 SEND_DATA_STRUCTURE mydata_send;
 RECEIVE_DATA_STRUCTURE_REMOTE mydata_remote;
@@ -37,6 +54,24 @@ unsigned long previousDispMillis = 0;
 const long Dispinterval = 10;
 
 SoftwareSerial bluetooth(BLUETOOTH_TX, BLUETOOTH_RX);
+
+// Configure keyboard keys (ASCII)
+#define UP 56     // NUMPAD 8
+#define DOWN 50   // NUMPAD 2
+#define ENTER 53  // NUMPAD 5
+#define BACK 55   // NUMPAD 7
+
+// Initialize the main menu items
+MAIN_MENU(
+    ITEM_BASIC("Start service"),
+    ITEM_BASIC("Connect to WiFi"),
+    ITEM_BASIC("Settings"),
+    ITEM_BASIC("Blink SOS"),
+    ITEM_BASIC("Blink random")
+);
+// Construct the LcdMenu
+LcdMenu menu(LCD_ROWS, LCD_COLS);
+
 
 //--------------------------------------setup()--------------------------------------
 void setup() {
@@ -68,6 +103,7 @@ void setup() {
   }
   //previous_Bluetooth_State = bluetooth_On;
 
+  menuIsShown = false;
   // NOTE: Cursor Position: (CHAR, LINE) starts at 0  
   lcd.backlight();
   lcd.setCursor(0,0);
@@ -80,6 +116,7 @@ void setup() {
        lcd.print("     blogspot.sk    ");
   Serial.println("     blogspot.sk    ");
   
+  pinMode(ROTARY_ENCODER_KEY, INPUT);
   pinMode(BUTTON1, INPUT_PULLUP);
   pinMode(BUTTON2, INPUT_PULLUP);
   pinMode(BUTTON3, INPUT_PULLUP);
@@ -109,12 +146,16 @@ void setup() {
   pinMode(A2, INPUT);
   pinMode(A3, INPUT);
 
-  pinMode(3, INPUT); // BT state
+  //pinMode(3, INPUT); // BT state
 
-  digitalWrite(2, LOW); // turn off LED
+  //digitalWrite(2, LOW); // turn off LED
   previous_state = 0;
   delay(1000);
   lcd.clear();
+
+  menuIsShown = true;
+  // Initialize LcdMenu with the menu items
+    menu.setupLcdWithMenu(0x27, mainMenu);
 }
 //----------------------------end of setup()------------------------------------
 //----------------------------BT_to_serial_prepare-----------------------------------------
@@ -281,7 +322,7 @@ void BtWriteEvent(unsigned long currentMillis) {
       previous_state = state;
 
       if (!bt_State) {
-          if(showDataOnDisplay) {
+          if(showDataOnDisplay && (!menuIsShown)) {
             //lcd.setCursor(0,3);
             //lcd.print(" BT connecting.. ");
           }
@@ -289,14 +330,14 @@ void BtWriteEvent(unsigned long currentMillis) {
         //pair();
       }
       else {
-          if(showDataOnDisplay) {
+          if(showDataOnDisplay && (!menuIsShown)) {
             lcd.setCursor(0,3);
             lcd.print(" BT Paired to Robot ");
           }
           Serial.println("BT Paired to Robot");
       }
     } else {
-      if (showDataOnDisplay) {
+      if (showDataOnDisplay && (!menuIsShown)) {
         lcd.setCursor(0,3);
         lcd.print(" BT:"+String(bluetooth_On)+  ", Displ:"+String(showDataOnDisplay));
       }
@@ -306,14 +347,14 @@ void BtWriteEvent(unsigned long currentMillis) {
       ET1.sendData();
     }
     
-    if(showDataOnDisplay){
+    if(showDataOnDisplay && (!menuIsShown)){
       if (!bluetooth_connecting) {
           lcd.setCursor(0,0);
           lcd.print("LX:"+String(leftJoystick_X)+", RX:"+String(rightJoystick_X)+"  ");
           lcd.setCursor(0,1);
           lcd.print("LY:"+String(leftJoystick_Y)+",  RY:"+String(rightJoystick_Y)+"  ");
           lcd.setCursor(0,2);
-          lcd.print("Buttons:"+String(button1)+" "+String(button2)+" "+String(button3)+" "+String(button4)+" "+String(button5));
+          lcd.print("Btns:"+String(button1)+" "+String(button2)+" "+String(button3)+" "+String(button4)+" "+String(button5)+" "+String(rotary_key));
       }
     }
 }
@@ -345,7 +386,7 @@ void loop() {
   
   if(bluetooth_On && bluetooth_initialized) {
     if(!button3) {
-      if(showDataOnDisplay) {
+      if(showDataOnDisplay && (!menuIsShown)) {
         lcd.setCursor(0,3);
         lcd.print("BT Connecting...");
         Serial.println("BT Connecting...");
@@ -360,7 +401,7 @@ void loop() {
     if(bluetooth_connecting) {
 
     } else {
-        if(showDataOnDisplay) {
+        if(showDataOnDisplay && (!menuIsShown)) {
         lcd.setCursor(0,3);
         lcd.print("Ready to connect");
         Serial.println("BT Ready to connect");
@@ -387,6 +428,43 @@ void loop() {
       ShowDataOnDisplay();
     }
   }  // end of second timed event
+
+  //rotary encoder handling
+  if(menuIsShown) {
+    long newPosition = myEnc.read();
+    if (newPosition != oldPosition) {
+      oldPosition = newPosition;
+      //Serial.println(newPosition);
+      newEncoderPosition = (newPosition/4);
+      if(showDataOnDisplay && (!menuIsShown)) {
+        lcd.setCursor(16,3);
+        lcd.print(String(newEncoderPosition));
+      }
+
+      if(oldEncoderPosition != newEncoderPosition) {
+        if(newEncoderPosition < oldEncoderPosition) {
+          menu.up();
+        }
+        if(newEncoderPosition > oldEncoderPosition) {
+          menu.down();
+        }
+        oldEncoderPosition = newEncoderPosition;
+      }//if(oldEncoderPosition != newEncoderPosition)
+    }//if (newPosition != oldPosition)
+  }//if(menuIsShown)
+
+  rotary_key = digitalRead(ROTARY_ENCODER_KEY);
+  if(previous_rotary_key && (!rotary_key)) {
+    if(menuIsShown) {
+      menu.hide();
+      //menu.back();
+      menuIsShown = false;
+    } else {
+      menuIsShown = true;
+      menu.show();
+    }
+  }
+  previous_rotary_key = rotary_key;
 }
 //-----------------end of loop-----------------------------------------
 //-----------------end of loop-----------------------------------------
@@ -405,6 +483,7 @@ void loop() {
 
 //--------------ReadHwData-------------------------------------------
 void ReadHwData() {
+    rotary_key = digitalRead(ROTARY_ENCODER_KEY);
     button1 =  digitalRead(BUTTON1);
     button2 =  digitalRead(BUTTON2);
     button3 =  digitalRead(BUTTON3);

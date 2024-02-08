@@ -1,6 +1,13 @@
-#define BUTTON1 3
-#define BUTTON2 4
-#define BUTTON3 5
+#define ROTARY_ENCODER_PIN1 2
+#define ROTARY_ENCODER_PIN2 3
+#define ROTARY_ENCODER_KEY  4
+
+#define LCD_ROWS 4
+#define LCD_COLS 20
+
+#define BUTTON1 5
+#define BUTTON2 6
+#define BUTTON3 7
 #define BUTTON4 33
 #define BUTTON5 32
 
@@ -43,6 +50,8 @@
 //#define Vcc 12
 #define ENABLE 8
 
+bool rotary_key;
+bool previous_rotary_key;
 bool button1;
 bool button2;
 bool button3;
@@ -57,6 +66,7 @@ bool bluetooth_connected;
 //bool bt_State;
 
 bool showDataOnDisplay;
+bool menuIsShown;
 
 bool switch1Up;
 bool switch2Up;
