@@ -70,12 +70,13 @@ SoftwareSerial bluetooth(BLUETOOTH_TX, BLUETOOTH_RX);
 void toggleBacklight(uint16_t isOn);
 void hide_menu();
 void back_menu();
+void start_BT_pair();
 extern MenuItem* settingsMenu[];
 
 // Initialize the main menu items
 MAIN_MENU(
     ITEM_BASIC("Start service"),
-    ITEM_BASIC("Connect to BT"),
+    ITEM_COMMAND("Connect to BT", start_BT_pair),
     ITEM_TOGGLE("Backlight", toggleBacklight),
     ITEM_SUBMENU("Settings", settingsMenu),
     ITEM_BASIC("Blink SOS"),
@@ -208,6 +209,25 @@ void BT_to_serial_prepare() {
     
 }
 //----------------------------end of BT_to_serial_prepare----------------------------------
+void scroll_text_on_display() {
+  Serial.println("scroll_text_on_display: lcdString3 = '"+String(lcdString3)+"'");
+
+  lcdString0 = lcdString1;
+  lcd.setCursor(0,0);
+  lcd.print(lcdString0 );
+
+  lcdString1 = lcdString2;
+  lcd.setCursor(0,1);
+  lcd.print(lcdString1 );
+  
+  lcdString2 = lcdString3;
+  lcd.setCursor(0,2);
+  lcd.print(lcdString2 );
+  
+  lcdString3="";
+  lcd.setCursor(0,3);
+  lcd.print(lcdString3 );
+}
 //--------------------------------pair_async-----------------------------------------------
 void pair_async(unsigned long currentMillis)
 {
@@ -215,9 +235,14 @@ void pair_async(unsigned long currentMillis)
   // From BT-->Serial
   while (bluetooth.available()) {
     c = bluetooth.read();
-    //Serial.print("Rec'"+String(c)+"'"); 
-    Serial.print(c);
-    lcd.print(c);
+    //Serial.print("Rec'"+String(c)+"'");
+    if (c!=10 & c!=13 ) {  
+      lcdString3 = lcdString3 + String(c); 
+      Serial.print(c);
+      lcd.print(c);
+    } else {
+      scroll_text_on_display();
+    }
   }
   
   // From Serial-->BT
@@ -241,21 +266,7 @@ void pair_async(unsigned long currentMillis)
             Serial.print("\r\n>");  
             NL = false; 
             //lcd.println();
-            lcdString0 = lcdString1;
-            lcd.setCursor(0,0);
-            lcd.print(lcdString0 );
-
-            lcdString1 = lcdString2;
-            lcd.setCursor(0,1);
-            lcd.print(lcdString1 );
-            
-            lcdString2 = lcdString3;
-            lcd.setCursor(0,2);
-            lcd.print(lcdString2 );
-            
-            lcdString3="";
-            lcd.setCursor(0,3);
-            lcd.print(lcdString3 );
+            scroll_text_on_display();
           }
         
         Serial.print(c);
@@ -406,16 +417,7 @@ void loop() {
   
   if(bluetooth_On && bluetooth_initialized) {
     if(!button3) {
-      if(showDataOnDisplay && (!menuIsShown)) {
-        lcd.setCursor(0,3);
-        lcd.print("BT Connecting...");
-        Serial.println("BT Connecting...");
-        bluetooth_connecting = true;
-        lcd.clear();
-        lcdString0=""; lcdString1=""; lcdString2=""; lcdString3="";
-        lcd.setCursor(0,0);
-        lcd.print("BT manual connecting");
-      }
+      start_BT_pair();
     }
 
     if(bluetooth_connecting) {
@@ -516,7 +518,19 @@ void back_menu() {
   Serial.println("back_menu");
   menu.back();
 }
+void start_BT_pair(){
+  Serial.println("start_BT_pair"); 
+  hide_menu();
+  if(showDataOnDisplay && (!menuIsShown)) {
+    lcd.clear();
+    Serial.println("BT Connecting...");
+    bluetooth_connecting = true;
+    lcdString0=""; lcdString1=""; lcdString2=""; lcdString3="";
+    lcd.setCursor(0,0);
+    lcd.print("BT manual connecting");
+  }
 
+}
 
 
 
