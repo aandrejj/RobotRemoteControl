@@ -16,6 +16,11 @@ EasyTransfer ET2;   // rec serial
 
 #include "Wire.h"  // Comes with Arduino IDE
 #include "LiquidCrystal_I2C.h"
+#include "ItemToggle.h"
+#include "ItemCommand.h"
+#include "ItemInput.h"
+#include "ItemSubMenu.h"
+#include "ItemList.h"
 #include "LcdMenu.h"
 #include "utils/commandProccesors.h"
 
@@ -61,13 +66,28 @@ SoftwareSerial bluetooth(BLUETOOTH_TX, BLUETOOTH_RX);
 #define ENTER 53  // NUMPAD 5
 #define BACK 55   // NUMPAD 7
 
+// Declare the call back function
+void toggleBacklight(uint16_t isOn);
+void hide_menu();
+void back_menu();
+extern MenuItem* settingsMenu[];
+
 // Initialize the main menu items
 MAIN_MENU(
     ITEM_BASIC("Start service"),
-    ITEM_BASIC("Connect to WiFi"),
-    ITEM_BASIC("Settings"),
+    ITEM_BASIC("Connect to BT"),
+    ITEM_TOGGLE("Backlight", toggleBacklight),
+    ITEM_SUBMENU("Settings", settingsMenu),
     ITEM_BASIC("Blink SOS"),
-    ITEM_BASIC("Blink random")
+    ITEM_COMMAND("Hide Menu", hide_menu)
+);
+/**
+ * Create submenu and precise its parent
+ */
+SUB_MENU(settingsMenu, mainMenu,
+    ITEM_BASIC("Backlight"),
+    ITEM_BASIC("Contrast"),
+    ITEM_COMMAND("..Back", back_menu)
 );
 // Construct the LcdMenu
 LcdMenu menu(LCD_ROWS, LCD_COLS);
@@ -456,11 +476,14 @@ void loop() {
   rotary_key = digitalRead(ROTARY_ENCODER_KEY);
   if(previous_rotary_key && (!rotary_key)) {
     if(menuIsShown) {
-      menu.hide();
+      Serial.println("loop: Executing menu.enter()...");
+      menu.enter();
+      //menu.hide();
       //menu.back();
-      menuIsShown = false;
+      //menuIsShown = false;
     } else {
       menuIsShown = true;
+      Serial.println("loop: Executing menu.show");
       menu.show();
     }
   }
@@ -475,8 +498,24 @@ void loop() {
 //-----------------end of loop-----------------------------------------
 //-----------------end of loop-----------------------------------------
 //-----------------end of loop-----------------------------------------
+/**
+ * Define callback
+ */
+void toggleBacklight(uint16_t isOn) { 
+  Serial.println("toggleBacklight isOn="+String(isOn));
+  menu.setBacklight(isOn);
+  
+}
 
-
+void hide_menu() {
+  Serial.println("hide menu");
+  menu.hide();
+  menuIsShown = false;
+}
+void back_menu() {
+  Serial.println("back_menu");
+  menu.back();
+}
 
 
 
@@ -577,6 +616,6 @@ void ShowDataOnDisplay() {
     lcd.print("                    ");
   }
 }
-
 //----------------------end of ShowDataOnDisplay--------------------------------
+
 
