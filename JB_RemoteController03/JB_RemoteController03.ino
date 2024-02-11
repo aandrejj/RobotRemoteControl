@@ -3,6 +3,7 @@
  *
  * This example code is in the public domain.
  */
+#define IS_HM_10 //uncomment this if module is HM-10
 
 #include <Encoder.h>  //  Encoder Library,  https://github.com/PaulStoffregen/Encoder ,  http://www.pjrc.com/teensy/td_libs_Encoder.html
 #include "EasyTransfer.h"
@@ -177,43 +178,29 @@ void bt_serial_async(unsigned long currentMillis)
     }
   }
   
-  // From command-->BT
-  if(sendToBT.length()>0) {
-    for(int i=0; i<sendToBT.length(); i++) {
-      char charToSend =sendToBT[i];
-      bluetooth.write(charToSend);
-      //lcdStringMain = lcdStringMain + String(charToSend);
-      myLcd.print(charToSend);
-      Serial.print(charToSend);
-    }
-    sendToBT="";
-  }
-
+  
   // From Serial-->BT
   if (Serial.available()) {
     while (Serial.available()) {
       c = Serial.read();
-      //Serial.print("Send'"+String(c)+"'");
-      
-
       #ifdef IS_HM_10
-      // do not send line end characters to the HM-10
+        // do not send line end characters to the HM-10
         if (c!=10 & c!=13 ) 
         {  
-             bluetooth.write(c);
-             //lcdStringMain = lcdStringMain +c;
-             myLcd.print(c);
-             //lcd.print(c);
+          bluetooth.write(c);
+          //lcdStringMain = lcdStringMain +c;
+          myLcd.print(c);
+          //lcd.print(c);
         }
         
         // Echo the user input to the main window. 
         // If there is a new line print the ">" character.
         if (NL) { 
-            Serial.print("\r\n>");  
-            NL = false; 
-            //lcd.println();
-            myLcd.scroll_text_on_display();
-          }
+          Serial.print("\r\n>");  
+          NL = false; 
+          //lcd.println();
+          myLcd.scroll_text_on_display();
+        }
         
         Serial.print(c);
         //lcdStringMain = lcdStringMain +c;
@@ -229,9 +216,21 @@ void bt_serial_async(unsigned long currentMillis)
         bluetooth.write(c);
       #endif
       
-    }
+    } // end of while
   }
   //delay(100);
+  // From command-->BT
+  if(sendToBT.length()>0) {
+    for(int i=0; i<sendToBT.length(); i++) {
+      char charToSend =sendToBT[i];
+      bluetooth.write(charToSend);
+      //lcdStringMain = lcdStringMain + String(charToSend);
+      myLcd.print(charToSend);
+      Serial.print(charToSend);
+    }
+    sendToBT="";
+  }
+
   bt_State = Bt_state_checker(currentMillis, previous_state, state);
 }
 //-----------------------------end of bt_serial_async-------------------------------------------

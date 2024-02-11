@@ -28,7 +28,7 @@ void MyLcd::setShownFromTo(byte ShowForm) {
 */
 
 void MyLcd::scroll_text_on_display() {
-  Serial.println("scroll_text_on_display: lcdStringMain = '"+String(lcdStringMain)+"'");
+  //Serial.println("scroll_text_on_display: lcdStringMain = '"+String(lcdStringMain)+"'");
 
   MyLcd::lcdString0 = MyLcd::lcdString1;
   MyLcd::lcdString1 = MyLcd::lcdString2;

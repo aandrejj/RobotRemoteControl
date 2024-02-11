@@ -28,7 +28,7 @@
 #define SWITCH5Down 58
 #define SWITCH6Down 59
 
-#define IS_HM_10 //uncomment this if module is HM-10
+
 
 // Outcomment line below for HM-10, HM-19 etc
 //#define HIGHSPEED   // Most modules are only 9600, although you can reconfigure this
