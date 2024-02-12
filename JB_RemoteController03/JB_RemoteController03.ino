@@ -34,7 +34,7 @@ EasyTransfer ET2;   // rec serial
 
 boolean NL = true;
 bool bt_State = false;
-
+bool previous_bt_state = false;
 bool newDataReceived;
 
 // Set the pins on the I2C chip used for LCD connections (Some LCD use Address 0x27 and others use 0x3F):
@@ -169,7 +169,7 @@ void bt_serial_async(unsigned long currentMillis)
       Serial.print(c);
       //lcd.print(c);
     } else {
-      int asciiVal = (int) c;
+      int asciiVal = (unsigned int) c;
       Serial.print("Ascii:");
       Serial.print(String(asciiVal));
       Serial.println(",");
@@ -181,51 +181,54 @@ void bt_serial_async(unsigned long currentMillis)
   
   // From Serial-->BT
   if (Serial.available()) {
+    String toCumulativeShow0="";
+    //String toCumulativeShow1="";
+    //String toCumulativeShow2="";
     while (Serial.available()) {
       c = Serial.read();
-      #ifdef IS_HM_10
-        // do not send line end characters to the HM-10
-        if (c!=10 & c!=13 ) 
-        {  
-          bluetooth.write(c);
-          //lcdStringMain = lcdStringMain +c;
-          myLcd.print(c);
-          //lcd.print(c);
-        }
-        
-        // Echo the user input to the main window. 
-        // If there is a new line print the ">" character.
-        if (NL) { 
-          Serial.print("\r\n>");  
-          NL = false; 
-          //lcd.println();
-          myLcd.scroll_text_on_display();
-        }
-        
-        Serial.print(c);
-        //lcdStringMain = lcdStringMain +c;
-        myLcd.print(c);
-        
-        if (c==10) { NL = true; }
-      #else
-        Serial.print(c);
-        //lcd.print(c);
-        //lcdStringMain = lcdStringMain +c;
-        myLcd.print(c);
-
+      // do not send line end characters to the HM-10
+      if (c!=10 & c!=13 ) 
+      {  
         bluetooth.write(c);
-      #endif
+        //lcdStringMain = lcdStringMain +c;
+        //myLcd.print(c);
+        //lcd.print(c);
+      }
+      
+      // Echo the user input to the main window. 
+      // If there is a new line print the ">" character.
+      if (NL) { 
+        Serial.print("\r\n>");  
+        NL = false; 
+        //lcd.println();
+        //lcdStringMain = lcdStringMain + toCumulativeShow0;
+        myLcd.print(toCumulativeShow0);
+        myLcd.scroll_text_on_display();
+        toCumulativeShow0="";
+        //lcdStringMain="";
+
+      }
+      
+      Serial.print(c);
+      //lcdStringMain = lcdStringMain +c;
+      toCumulativeShow0 = toCumulativeShow0 + String(c);
+      //myLcd.print(c);
+      
+      if (c==10) { NL = true; }
       
     } // end of while
+    myLcd.println(toCumulativeShow0);
+    toCumulativeShow0="";
+
   }
   //delay(100);
   // From command-->BT
   if(sendToBT.length()>0) {
+    myLcd.print(sendToBT);
     for(int i=0; i<sendToBT.length(); i++) {
       char charToSend =sendToBT[i];
       bluetooth.write(charToSend);
       //lcdStringMain = lcdStringMain + String(charToSend);
-      myLcd.print(charToSend);
       Serial.print(charToSend);
     }
     sendToBT="";
@@ -296,25 +299,25 @@ void BtWriteEvent(unsigned long currentMillis) {
     if(bluetooth_On) {
       // check to see if BT is paired
       state = digitalRead(STATE);
-
+      
+      previous_bt_state = bt_State;
       bt_State = Bt_state_checker(currentMillis, previous_state, state);
 
       previous_state = state;
 
       if (!bt_State) {
-          if(showForm == form_Menu) {
-            //lcd.setCursor(0,3);
-            //lcd.print(" BT connecting.. ");
-          }
-          //Serial.println("BT connecting...");
-        //pair();
+        if(previous_bt_state!= bt_State) {
+          Serial.println("BT connecting...");
+          lcd.setCursor(0,3);
+          lcd.print(" BT connecting.. ");
+        }
       }
       else {
-          if(showDataOnDisplay && (!menuIsShown)) {
-            lcd.setCursor(0,3);
-            lcd.print(" BT Paired to Robot ");
-          }
+        if(previous_bt_state!= bt_State) {
           Serial.println("BT Paired to Robot");
+          lcd.setCursor(0,3);
+          lcd.print(" BT Paired to Robot ");
+        }
       }
     } else {
       if(showForm == form_ShowMeasuredData) {

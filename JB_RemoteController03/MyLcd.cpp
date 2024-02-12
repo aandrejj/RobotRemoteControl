@@ -91,6 +91,6 @@ void MyLcd::showSplashScreen() {
 }
 
 void MyLcd::showMeasuredDateScreen(int leftJoystick_X, int rightJoystick_X, int leftJoystick_Y, int rightJoystick_Y, String btnsString, String lcdString3) {
-  Serial.println("showMeasuredDateScreen");
+  //Serial.println("showMeasuredDateScreen");
   MyLcd::formShow(myLcdShowMeasuredData.showForm(leftJoystick_X, rightJoystick_X, leftJoystick_Y, rightJoystick_Y, btnsString, lcdString3));
 }
