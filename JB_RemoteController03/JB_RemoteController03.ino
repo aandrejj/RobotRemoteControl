@@ -225,16 +225,17 @@ void bt_serial_async(unsigned long currentMillis)
   // From command-->BT
   if(sendToBT.length()>0) {
     myLcd.print(sendToBT);
+    Serial.print(sendToBT);
     for(int i=0; i<sendToBT.length(); i++) {
       char charToSend =sendToBT[i];
       bluetooth.write(charToSend);
       //lcdStringMain = lcdStringMain + String(charToSend);
-      Serial.print(charToSend);
+      //Serial.print(charToSend);
     }
     sendToBT="";
   }
 
-  bt_State = Bt_state_checker(currentMillis, previous_state, state);
+  //bt_State = Bt_state_checker(currentMillis, previous_state, state);
 }
 //-----------------------------end of bt_serial_async-------------------------------------------
 //----------------------pair()--------------------------------------------------
@@ -262,6 +263,41 @@ unsigned long maxTimeOfNoChangeMillis = 1500;
 unsigned long  currentStateDuration;
 bool LedIsBlinking = true;
 bool BtLedIsSteadyOn = false;
+
+//---------------------check_bt_from_loop--------------------------
+bool check_bt_from_loop(unsigned long currentMillis) {
+  if(bluetooth_On) {
+      // check to see if BT is paired
+      state = digitalRead(STATE);
+      
+      previous_bt_state = bt_State;
+      bt_State = Bt_state_checker(currentMillis, previous_state, state);
+
+      previous_state = state;
+
+      if (!bt_State) {
+        if(previous_bt_state!= bt_State) {
+          Serial.println("BT connecting...");
+          lcd.setCursor(0,3);
+          lcd.print(" BT connecting.. ");
+        }
+      }
+      else {
+        if(previous_bt_state!= bt_State) {
+          Serial.println("BT Paired to Robot");
+          lcd.setCursor(0,3);
+          lcd.print(" BT Paired to Robot ");
+        }
+      }
+    } else {
+      if(showForm == form_ShowMeasuredData) {
+        lcd.setCursor(0,3);
+        lcd.print(" BT:"+String(bluetooth_On)+  ", Displ:"+String(showDataOnDisplay));
+      }
+  }// end of if bluetooth_On
+  return bt_State;
+}
+//-----------------------end of   check_bt_from_loop---------------------------------
 
 //-----------------------Bt_state_checker----------------------------------------------
 bool Bt_state_checker(unsigned long currentMillis, bool previousState, bool newState) {
@@ -296,36 +332,6 @@ void BtWriteEvent(unsigned long currentMillis) {
       Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
     }
    
-    if(bluetooth_On) {
-      // check to see if BT is paired
-      state = digitalRead(STATE);
-      
-      previous_bt_state = bt_State;
-      bt_State = Bt_state_checker(currentMillis, previous_state, state);
-
-      previous_state = state;
-
-      if (!bt_State) {
-        if(previous_bt_state!= bt_State) {
-          Serial.println("BT connecting...");
-          lcd.setCursor(0,3);
-          lcd.print(" BT connecting.. ");
-        }
-      }
-      else {
-        if(previous_bt_state!= bt_State) {
-          Serial.println("BT Paired to Robot");
-          lcd.setCursor(0,3);
-          lcd.print(" BT Paired to Robot ");
-        }
-      }
-    } else {
-      if(showForm == form_ShowMeasuredData) {
-        lcd.setCursor(0,3);
-        lcd.print(" BT:"+String(bluetooth_On)+  ", Displ:"+String(showDataOnDisplay));
-      }
-    }// end of if bluetooth_On
-
     if(bluetooth_On){
       ET1.sendData();
     }
@@ -379,25 +385,32 @@ void loop() {
 
     if(showForm == form_BluetoothConnecting){
       bt_serial_async(currentMillis);
-    }
-  }
-
-  if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
-    previousMillis = currentMillis;
-    ReadHwData();
-    BtWriteEvent(currentMillis);
-  } // end of timed event send
-
-  if (currentMillis - previousDispMillis >= Dispinterval) {  // start timed event for read
-    previousDispMillis = currentMillis;  
-    newDataReceived = BtReadEvent();
-    if(newDataReceived) {
-      if(showForm == form_ShowMeasuredData){
-        ShowDataOnDisplay();
+      if (check_bt_from_loop(currentMillis)==true) {
+        Serial.println("Bluetooth connected");
+        showForm = form_Menu;
+        menuIsShown = true;
+        menu.show();
       }
     }
-  }  // end of second timed event
+    else
+    {
+      if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
+        previousMillis = currentMillis;
+        ReadHwData();
+        BtWriteEvent(currentMillis);
+      } // end of timed event send
 
+      if (currentMillis - previousDispMillis >= Dispinterval) {  // start timed event for read
+        previousDispMillis = currentMillis;  
+        newDataReceived = BtReadEvent();
+        if(newDataReceived) {
+          if(showForm == form_ShowMeasuredData){
+            ShowDataOnDisplay();
+          }
+        }
+      }  // end of second timed event
+    }//end of else (showForm == form_BluetoothConnecting)
+  }
   //rotary encoder handling
   if(showForm == form_Menu) {
     long newPosition = myEnc.read();
@@ -503,10 +516,12 @@ void show_measured_data() {
 
 void start_BT_pair(){
   Serial.println("start_BT_pair"); 
-  hide_menu();
+  //hide_menu();
   showForm = form_BluetoothConnecting;
   if(showForm == form_BluetoothConnecting) {
     myLcd.ShowNewForm("","","BT Connecting...","BT manual connecting");
+    //execute_AT_command("AT+CONNL");
+    sendToBT = "AT+CON3CA308B4E3B5";
   }
 }
 
