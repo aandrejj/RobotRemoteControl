@@ -319,7 +319,7 @@ void BtWriteEvent(unsigned long currentMillis) {
     
     if(showForm == form_ShowMeasuredData){
       String btnsString = "Btns:"+String(button1)+" "+String(button2)+" "+String(button3)+" "+String(button4)+" "+String(button5)+" "+String(rotary_key);
-      myLcd.showMeasuredDateScreen(leftJoystick_X, rightJoystick_X, leftJoystick_Y, rightJoystick_Y, btnsString, "dataSent:"+String(dataSent));
+      myLcd.showMeasuredDateScreen(leftJoystick_X, rightJoystick_X, leftJoystick_Y, rightJoystick_Y, btnsString, "");
     }
 }
 //------------------end of BtWriteEvnet-------------------------------------
@@ -605,14 +605,13 @@ void ReadHwData() {
 //---------------------ShowDataOnDisplay----------------------------------------
 void ShowDataOnDisplay() {
   count = String(mydata_remote.count);
-  lcd.setCursor(0,3);
-  lcd.print(count);
 
   if (mydata_remote.mode == 0) {
-    lcd.setCursor(0,0);
-    lcd.print("Mode 0 - Kin Test   ");
-    lcd.setCursor(0,1);
-    lcd.print("                    ");
+    //lcd.setCursor(0,3);
+    //lcd.print("Mode 0 - Kin Test   "+String(count));
+    //lcd.setCursor(0,1);
+    //lcd.print("                    ");
+    myLcd.formShow("", "", "", "Mode0 - Test "+String(count));
   }
   else if (mydata_remote.mode == 1) {
     lcd.setCursor(0,0);
@@ -643,6 +642,10 @@ void ShowDataOnDisplay() {
     lcd.print("Mode 5 -            ");
     lcd.setCursor(0,1);
     lcd.print("                    ");
+  }
+  else{
+    lcd.setCursor(0,3);
+    lcd.print(count);
   }
 }
 //----------------------end of ShowDataOnDisplay--------------------------------
