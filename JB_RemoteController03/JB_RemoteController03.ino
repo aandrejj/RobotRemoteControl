@@ -402,7 +402,7 @@ void loop_Handling_rotary_key() {
   if(previous_rotary_key && (!rotary_key)) {
     if(showForm == form_Menu) {
       Serial.println("loop: Executing menu.enter()...");
-      menu.hide();
+      //menu.hide();
       menu.enter();
       //menu.back();
       //menuIsShown = false;
@@ -531,7 +531,7 @@ void show_measured_data() {
 
 void start_BT_pair(){
   Serial.println("start_BT_pair"); 
-  //hide_menu();
+  hide_menu();
   showForm = form_BluetoothConnecting;
   if(showForm == form_BluetoothConnecting) {
     myLcd.ShowNewForm("","","BT Connecting...","BT manual connecting");
