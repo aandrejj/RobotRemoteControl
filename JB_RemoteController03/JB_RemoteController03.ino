@@ -306,19 +306,20 @@ bool Bt_state_checker(unsigned long currentMillis, bool previousState, bool newS
 //------------------BtWriteEvent-------------------------------------
 
 void BtWriteEvent(unsigned long currentMillis) {
-
+    bool dataSent = false; 
     if (Serial.available()) {
       Serial.print("bluetooth_On = "+ String(bluetooth_On));
       Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
     }
    
     if(bluetooth_On){
+      dataSent = true;
       ET1.sendData();
     }
     
     if(showForm == form_ShowMeasuredData){
       String btnsString = "Btns:"+String(button1)+" "+String(button2)+" "+String(button3)+" "+String(button4)+" "+String(button5)+" "+String(rotary_key);
-      myLcd.showMeasuredDateScreen(leftJoystick_X, rightJoystick_X, leftJoystick_Y, rightJoystick_Y, btnsString, "");
+      myLcd.showMeasuredDateScreen(leftJoystick_X, rightJoystick_X, leftJoystick_Y, rightJoystick_Y, btnsString, "dataSent:"+String(dataSent));
     }
 }
 //------------------end of BtWriteEvnet-------------------------------------
