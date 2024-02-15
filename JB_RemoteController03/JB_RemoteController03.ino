@@ -238,26 +238,6 @@ void bt_serial_async(unsigned long currentMillis)
   //bt_State = Bt_state_checker(currentMillis, previous_state, state);
 }
 //-----------------------------end of bt_serial_async-------------------------------------------
-//----------------------pair()--------------------------------------------------
-void pair() {
-  Serial.println("pair: started");
-    state = digitalRead(STATE);
-    Serial.println("pair: state =" + String(state));
-    while(state == 0) {
-        lcd.setCursor(0,3);
-        lcd.print("Waiting to PairBT");
-        //lcd.setCursor(0,3);
-        //lcd.print("               ");
-        previous_state = state;
-        state = digitalRead(STATE);
-        lcd.print(", "+String(state));
-    }
-
-    delay(500);  // wait before sending data
-    Serial.println("pair: End. State@end = "+String(state));
-}
-//-----------------end of pair-------------------------------------
-
 unsigned long milisOfLastStateChanged;
 unsigned long maxTimeOfNoChangeMillis = 1500;
 unsigned long  currentStateDuration;
@@ -354,87 +334,70 @@ bool BtReadEvent() {
     return _newDataReceived;
 }
 //------------------end of BtReadEvent-------------------------------------------
-
-//-------------------------loop------------------------------------------------
-void loop() {
-
-  unsigned long currentMillis = millis();
-  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
-  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
-  button1 =  digitalRead(BUTTON1);
-  button3 =  digitalRead(BUTTON3);
-
-  if((!previous_Bluetooth_State) && (bluetooth_On)) {
-    BT_to_serial_prepare();
-  }
-    
-  if(bluetooth_On && bluetooth_initialized) {
-    if(showForm == form_Menu) {
-      if(!button3) {
-        start_BT_pair();
-      }
-    } else {
-      if(!button1) {
-        Serial.println("Button1: menu.back, menu.show");
-        //menu.back();
-        menu.show();
-        showForm = form_Menu;
-        menuIsShown = true;
-      }
-    }
-
-    if(showForm == form_BluetoothConnecting){
-      bt_serial_async(currentMillis);
-      if (check_bt_from_loop(currentMillis)==true) {
-        Serial.println("Bluetooth connected");
-        showForm = form_Menu;
-        menuIsShown = true;
-        menu.show();
-      }
-    }
-    else
-    {
-      if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
-        previousMillis = currentMillis;
-        ReadHwData();
-        BtWriteEvent(currentMillis);
-      } // end of timed event send
-
-      if (currentMillis - previousDispMillis >= Dispinterval) {  // start timed event for read
-        previousDispMillis = currentMillis;  
-        newDataReceived = BtReadEvent();
-        if(newDataReceived) {
-          if(showForm == form_ShowMeasuredData){
-            ShowDataOnDisplay();
-          }
-        }
-      }  // end of second timed event
-    }//end of else (showForm == form_BluetoothConnecting)
+//------------------loop_Handling_formMenu---------------------------------------
+void loop_Handling_formMenu(){
+  if(!button3) {
+    Serial.println("Blue Button 'Connect' pressed.");
+    start_BT_pair();
   }
   //rotary encoder handling
-  if(showForm == form_Menu) {
-    long newPosition = myEnc.read();
-    if (newPosition != oldPosition) {
-      oldPosition = newPosition;
-      //Serial.println(newPosition);
-      newEncoderPosition = (newPosition/4);
-      if(showForm == form_ShowMeasuredData) {
-        lcd.setCursor(16,3);
-        lcd.print(String(newEncoderPosition));
+  long newPosition = myEnc.read();
+  if (newPosition != oldPosition) {
+    oldPosition = newPosition;
+    //Serial.println(newPosition);
+    newEncoderPosition = (newPosition/4);
+    if(showForm == form_ShowMeasuredData) {
+      lcd.setCursor(16,3);
+      lcd.print(String(newEncoderPosition));
+    }
+
+    if(oldEncoderPosition != newEncoderPosition) {
+      if(newEncoderPosition < oldEncoderPosition) {
+        menu.up();
       }
+      if(newEncoderPosition > oldEncoderPosition) {
+        menu.down();
+      }
+      oldEncoderPosition = newEncoderPosition;
+    }//if(oldEncoderPosition != newEncoderPosition)
+  }//if (newPosition != oldPosition)
+}
+//----------------end of loop_Handling_formMenu--------------------------------
 
-      if(oldEncoderPosition != newEncoderPosition) {
-        if(newEncoderPosition < oldEncoderPosition) {
-          menu.up();
-        }
-        if(newEncoderPosition > oldEncoderPosition) {
-          menu.down();
-        }
-        oldEncoderPosition = newEncoderPosition;
-      }//if(oldEncoderPosition != newEncoderPosition)
-    }//if (newPosition != oldPosition)
-  }//if(showForm == form_Menu)
+//------------loop_Handling_formBluetoothConnecting----------------------------
+void loop_Handling_formBluetoothConnecting(unsigned long currentMillis) {
+  bt_serial_async(currentMillis);
+  if (check_bt_from_loop(currentMillis)==true) {
+    Serial.println("Bluetooth connected");
+    showForm = form_Menu;
+    menuIsShown = true;
+    menu.show();
+  }
+}
+//--------end of loop_Handling_formBluetoothConnecting--------------------------
 
+//-----loop_Handling_form_ShowMeasuredData--------------------------------------
+void loop_Handling_form_ShowMeasuredData(unsigned long currentMillis) {
+  if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
+    previousMillis = currentMillis;
+    ReadHwData();
+    BtWriteEvent(currentMillis);
+  } // end of timed event send
+
+  if (currentMillis - previousDispMillis >= Dispinterval) {  // start timed event for read
+    previousDispMillis = currentMillis;  
+    newDataReceived = BtReadEvent();
+    if(newDataReceived) {
+      if(showForm == form_ShowMeasuredData){
+        ShowDataOnDisplay();
+      }
+    }
+  }  // end of second timed event
+}
+//------end of loop_Handling_form_ShowMeasuredData-----------------------------
+
+//------------loop_Handling_rotary_key----------------------------------------
+void loop_Handling_rotary_key() {
   rotary_key = digitalRead(ROTARY_ENCODER_KEY);
   if(previous_rotary_key && (!rotary_key)) {
     if(showForm == form_Menu) {
@@ -452,6 +415,58 @@ void loop() {
     }
   }
   previous_rotary_key = rotary_key;
+}
+//----------end of loop_Handling_rotary_key ----------------------------------
+
+//-------------------------loop------------------------------------------------
+//-------------------------loop------------------------------------------------
+//-------------------------loop------------------------------------------------
+//-------------------------loop------------------------------------------------
+void loop() {
+
+  unsigned long currentMillis = millis();
+  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
+  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
+  button1 =  digitalRead(BUTTON1);
+  button3 =  digitalRead(BUTTON3);
+
+  if((!previous_Bluetooth_State) && (bluetooth_On)) {
+    BT_to_serial_prepare();
+  }
+    
+  if(bluetooth_On && bluetooth_initialized) {
+    if(showForm != form_Menu) {
+      if(!button1) {
+        Serial.println("Button1: menu.back, menu.show");
+        //menu.back();
+        menu.show();
+        showForm = form_Menu;
+        menuIsShown = true;
+      }
+    }
+
+    if(showForm == form_BluetoothConnecting){
+
+      loop_Handling_formBluetoothConnecting(currentMillis);
+
+    }
+    else if(showForm == form_Menu) {
+
+      loop_Handling_formMenu();
+
+    }
+    else if(showForm == form_ShowMeasuredData) {
+
+      loop_Handling_form_ShowMeasuredData(currentMillis);
+
+    }
+    else 
+    {
+      //?
+    }
+  }
+  
+  loop_Handling_rotary_key();
 }
 //-----------------end of loop-----------------------------------------
 //-----------------end of loop-----------------------------------------
