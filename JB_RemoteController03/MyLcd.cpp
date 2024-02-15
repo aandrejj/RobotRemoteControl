@@ -73,17 +73,25 @@ void MyLcd::formShow(FormData formData) {
 }
 
 void MyLcd::formShow(String lcdString0, String lcdString1, String lcdString2, String lcdString3) {
-  lcdDev.setCursor(0,0);
-  lcdDev.print(lcdString0);
+  if(lcdString0.length()>0) {
+    lcdDev.setCursor(0,0);
+    lcdDev.print(lcdString0);
+  }
 
-  lcdDev.setCursor(0,1);
-  lcdDev.print(lcdString1);
+  if(lcdString1.length()>0) {
+    lcdDev.setCursor(0,1);
+    lcdDev.print(lcdString1);
+  }
 
-  lcdDev.setCursor(0,2);
-  lcdDev.print(lcdString2);
+  if(lcdString2.length()>0) {
+    lcdDev.setCursor(0,2);
+    lcdDev.print(lcdString2);
+  }
   
-  lcdDev.setCursor(0,3);
-  lcdDev.print(lcdString3);  
+  if(lcdString3.length()>0) {
+    lcdDev.setCursor(0,3);
+    lcdDev.print(lcdString3);  
+  }
 }
 
 void MyLcd::showSplashScreen() {

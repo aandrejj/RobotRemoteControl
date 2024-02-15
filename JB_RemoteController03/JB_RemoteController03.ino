@@ -306,13 +306,14 @@ bool Bt_state_checker(unsigned long currentMillis, bool previousState, bool newS
 //------------------BtWriteEvent-------------------------------------
 
 void BtWriteEvent(unsigned long currentMillis) {
-
+    bool dataSent = false; 
     if (Serial.available()) {
       Serial.print("bluetooth_On = "+ String(bluetooth_On));
       Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
     }
    
     if(bluetooth_On){
+      dataSent = true;
       ET1.sendData();
     }
     
@@ -604,14 +605,13 @@ void ReadHwData() {
 //---------------------ShowDataOnDisplay----------------------------------------
 void ShowDataOnDisplay() {
   count = String(mydata_remote.count);
-  lcd.setCursor(0,3);
-  lcd.print(count);
 
   if (mydata_remote.mode == 0) {
-    lcd.setCursor(0,0);
-    lcd.print("Mode 0 - Kin Test   ");
-    lcd.setCursor(0,1);
-    lcd.print("                    ");
+    //lcd.setCursor(0,3);
+    //lcd.print("Mode 0 - Kin Test   "+String(count));
+    //lcd.setCursor(0,1);
+    //lcd.print("                    ");
+    myLcd.formShow("", "", "", "Mode0 - Test "+String(count));
   }
   else if (mydata_remote.mode == 1) {
     lcd.setCursor(0,0);
@@ -642,6 +642,10 @@ void ShowDataOnDisplay() {
     lcd.print("Mode 5 -            ");
     lcd.setCursor(0,1);
     lcd.print("                    ");
+  }
+  else{
+    lcd.setCursor(0,3);
+    lcd.print(count);
   }
 }
 //----------------------end of ShowDataOnDisplay--------------------------------
