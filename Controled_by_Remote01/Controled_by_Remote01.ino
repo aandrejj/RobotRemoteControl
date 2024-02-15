@@ -163,7 +163,8 @@ void loop() {
                 Serial.println( "LX:"+String(mydata_remote.index_finger_knuckle_right)+
                               ", LY:"+String(mydata_remote.pinky_knuckle_right)+
                               ", RX:"+String(mydata_remote.index_finger_fingertip)+
-                              ", RY:"+String(mydata_remote.index_finger_knuckle_left));
+                              ", RY:"+String(mydata_remote.index_finger_knuckle_left)+
+                              ", count:"+String(count));
             } // end of receive data
 
             else if(currentMillis - previousSafetyMillis > 200) {         // safeties
