@@ -273,7 +273,12 @@ void loop() {
   while (bluetooth.available()) {
     c = bluetooth.read();
     //Serial.print("Rec'"+String(c)+"'"); 
-    Serial.print(c); 
+    if (c>31 && c<128 ) {
+      Serial.print(c); 
+    } else {
+      int asciiVal = (int) c;
+      Serial.println("Ascii:"+String(asciiVal)+",");
+    }
   }
   
   // From Serial-->BT
@@ -298,7 +303,7 @@ void loop() {
         
         if (c==10) { NL = true; }
       #else
-      Serial.print(c);
+        Serial.print(c);
         bluetooth.write(c);
       #endif
       

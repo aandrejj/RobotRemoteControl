@@ -28,7 +28,7 @@
 #define SWITCH5Down 58
 #define SWITCH6Down 59
 
-#define IS_HM_10 //uncomment this if module is HM-10
+
 
 // Outcomment line below for HM-10, HM-19 etc
 //#define HIGHSPEED   // Most modules are only 9600, although you can reconfigure this
@@ -50,6 +50,14 @@
 //#define Vcc 12
 #define ENABLE 8
 
+// Configure keyboard keys (ASCII)
+#define UP 56     // NUMPAD 8
+#define DOWN 50   // NUMPAD 2
+#define ENTER 53  // NUMPAD 5
+#define BACK 55   // NUMPAD 7
+
+
+
 bool rotary_key;
 bool previous_rotary_key;
 bool button1;
@@ -63,6 +71,9 @@ bool previous_Bluetooth_State;
 bool bluetooth_initialized;
 bool bluetooth_connecting;
 bool bluetooth_connected;
+
+byte showForm;
+
 //bool bt_State;
 
 bool showDataOnDisplay;
@@ -90,4 +101,4 @@ int leftJoystick_Y;
 
 String count;
 
-String lcdString0, lcdString1, lcdString2, lcdString3; 
+String sendToBT;
