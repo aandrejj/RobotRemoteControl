@@ -16,8 +16,7 @@ EasyTransfer ET1;   // send serial
 EasyTransfer ET2;   // rec serial
 
 #define SERVO_MIN   135                // https://www.arduino.cc/reference/en/libraries/servo/writemicroseconds/
-#define SERVO_MAX   615                // value of 1000 is fully counter-clockwise, 2000 is fully clockwise, and 1500 is in the middle.
-                                               // ..so that servos often respond to values between 700 and 2300.
+#define SERVO_MAX   615                // value of 135 is fully counter-clockwise, 615 is fully clockwise.
 
 // knee calcs
 #define DIGITLENGTH 330L    // length of each top/bottom leg
@@ -74,10 +73,10 @@ Servo servo02; //spodne hnede rameno
 Servo servo03; //horne  biela rameno
 Servo servo04; //ruka nabok  100 = zhruba vodorovne
 
-MovingAverage<uint16_t,4> servo_MovingAverage01;
-MovingAverage<uint16_t,4> servo_MovingAverage02;
-MovingAverage<uint16_t,4> servo_MovingAverage03;
-MovingAverage<uint16_t,4> servo_MovingAverage04;
+//MovingAverage<uint16_t,4> servo_MovingAverage01;
+//MovingAverage<uint16_t,4> servo_MovingAverage02;
+//MovingAverage<uint16_t,4> servo_MovingAverage03;
+//MovingAverage<uint16_t,4> servo_MovingAverage04;
 
 uint16_t servo01_Avg;
 uint16_t servo02_Avg;
@@ -161,20 +160,12 @@ void setup() {
 	
   Serial.println("setup:: Servo Initialization started");
 	delay(200);
-   //https://www.arduino.cc/reference/en/libraries/servo/writemicroseconds/
-   //value of 1000 is fully counter-clockwise, 2000 is fully clockwise, and 1500 is in the middle.
-   //so that servos often respond to values between 700 and 2300.
-    //servo01.attach( 4); //zakladna
-    //servo02.attach( 5);//spodne hnede rameno
-    //servo03.attach( 6);//horne  biela rameno
-    //servo04.attach( 7);//ruka nabok  100 = zhruba vodorovne
 
     pwm.begin();
   
     pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
 
-
-	  Serial.println("setup: Servos attached");
+	  Serial.println("setup: Servos on PCA9685  attached");
 
 	  delay(20);
 
@@ -223,32 +214,6 @@ void loop() {
                               ", count:"+String(count));
                               */
 
-              /*
-              //legLength = map(mydata_remote.RT,0,1023,380,650);
-              servo01_Microsecs = map(mydata_remote.index_finger_knuckle_right,0,1023,SERVO_MIN_MILISEC,SERVO_MAX_MILISEC);
-              servo02_Microsecs = map(mydata_remote.pinky_knuckle_right,0,1023,SERVO_MIN_MILISEC,SERVO_MAX_MILISEC);
-              servo03_Microsecs = map(mydata_remote.index_finger_fingertip,0,1023,SERVO_MIN_MILISEC,SERVO_MAX_MILISEC);
-              servo04_Microsecs = map(mydata_remote.index_finger_knuckle_left,0,1023,SERVO_MIN_MILISEC,SERVO_MAX_MILISEC);
-              */
-
-              //servo_MovingAverage01.Push(mydata_remote.index_finger_knuckle_right);
-              /*servo_MovingAverage02.Push(mydata_remote.pinky_knuckle_right);
-              servo_MovingAverage03.Push(mydata_remote.index_finger_fingertip);
-              servo_MovingAverage04.Push(mydata_remote.index_finger_knuckle_left);
-              */
-
-              //servo01_Avg = servo_MovingAverage01.MA();
-              /*servo02_Avg = servo_MovingAverage02.MA();
-              servo03_Avg = servo_MovingAverage03.MA();
-              servo04_Avg = servo_MovingAverage04.MA();
-              **/
-
-              //servo01_constrained = constrain(servo01_Avg, 0, 1023);
-              /*servo02_constrained = constrain(servo02_Avg, 0, 1023);
-              servo03_constrained = constrain(servo03_Avg, 0, 1023);
-              servo04_constrained = constrain(servo04_Avg, 0, 1023);
-              */
-
               servo01_constrained = constrain(mydata_remote.index_finger_knuckle_right, 0, 1023);
               servo02_constrained = constrain(mydata_remote.pinky_knuckle_right, 0, 1023);
               servo03_constrained = constrain(mydata_remote.index_finger_fingertip, 0, 1023);
@@ -260,32 +225,22 @@ void loop() {
               servo03_Angle = map(servo03_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
               servo04_Angle = map(servo04_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
               
-
               /*
-              Serial.println(   "LX:"+String(mydata_remote.index_finger_knuckle_right) + ", S1avg:" + String(servo01_Avg) + ", S1constrained:" + String(servo01_constrained) + ", S1[us]:" + String(servo01_Microsecs) +
-                                ", count:"+ String(count));
-              */
-              
               Serial.println(   "LX:"+String(mydata_remote.index_finger_knuckle_right)+ ", S1:" + String(servo01_Angle) +
                             ",   LY:"+String(mydata_remote.pinky_knuckle_right       )+ ", S2:" + String(servo02_Angle) +
                             ",   RX:"+String(mydata_remote.index_finger_fingertip    )+ ", S3:" + String(servo03_Angle) +
                             ",   RY:"+String(mydata_remote.index_finger_knuckle_left )+ ", S4:" + String(servo04_Angle) +
                             ", count:"+String(count));
-              
+              */
              // end of receive data
             } else if(currentMillis - previousSafetyMillis > 200) {         // safeties
             //Serial.Println("No Data")
             }
 
             count = count+1;                                              // update count for remote monitoring
-  
-            //servo01.write(servo01_Angle);
+       }  // end of timed event Receive/Send
 
-
-
-       }  // end of timed event
-
-      if (currentMillis - previousServoMillis >= servoInterval) {  // start timed event for read and send
+      if (currentMillis - previousServoMillis >= servoInterval) {  // start timed event for Servos  (200 ms)
         previousServoMillis = currentMillis;
         pwm.setPWM(0, 0, servo01_Angle);  //Servo 0
         pwm.setPWM(1, 0, servo02_Angle);  //Servo 1
@@ -293,11 +248,5 @@ void loop() {
         pwm.setPWM(3, 0, servo04_Angle);  //Servo 3
       }
 
-}
-
-int angleToPulse(int ang){
-   int pulse = map(ang,0, 1024, SERVO_MIN,SERVO_MAX);// map angle of 0 to 180 to Servo min and Servo max 
-   Serial.println("Angle: "+String(ang)+",  pulse: "+String(pulse));
-   return pulse;
 }
 
