@@ -1,10 +1,23 @@
 #include "EasyTransfer.h"
 #include "SoftwareSerial.h"
+
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+
 #include <Math.h>
+
+#include <Servo.h>
+#include <Ramp.h>
+
+#include "MovingAverage.h"
 
 //create object
 EasyTransfer ET1;   // send serial
 EasyTransfer ET2;   // rec serial
+
+#define SERVO_MIN   135                // https://www.arduino.cc/reference/en/libraries/servo/writemicroseconds/
+#define SERVO_MAX   615                // value of 1000 is fully counter-clockwise, 2000 is fully clockwise, and 1500 is in the middle.
+                                               // ..so that servos often respond to values between 700 and 2300.
 
 // knee calcs
 #define DIGITLENGTH 330L    // length of each top/bottom leg
@@ -32,7 +45,7 @@ EasyTransfer ET2;   // rec serial
 //#define Vcc 12
 #define ENABLE 8
 
-
+/*
 double legLength;           // required overall leg length
 double kneeAngle;           // the actual angle of the knee between top and bottom sections
 double kneeAngle2;          // angle between bottom of leg and actuator
@@ -42,6 +55,7 @@ double kneeAngle3a;          // other angle
 double kneeAngle4;          // other angle.
 double kneeAngle4a;          // other angle
 double kneeActuator;        // calculated length of actuator from joint
+*/
 
 int axis1;
 int axis2;
@@ -54,6 +68,32 @@ int mode;
 int count;
 
 int menuFlag = 0;        
+
+Servo servo01; //zakladna
+Servo servo02; //spodne hnede rameno
+Servo servo03; //horne  biela rameno
+Servo servo04; //ruka nabok  100 = zhruba vodorovne
+
+MovingAverage<uint16_t,4> servo_MovingAverage01;
+MovingAverage<uint16_t,4> servo_MovingAverage02;
+MovingAverage<uint16_t,4> servo_MovingAverage03;
+MovingAverage<uint16_t,4> servo_MovingAverage04;
+
+uint16_t servo01_Avg;
+uint16_t servo02_Avg;
+uint16_t servo03_Avg;
+uint16_t servo04_Avg;
+
+uint16_t servo01_constrained;
+uint16_t servo02_constrained;
+uint16_t servo03_constrained;
+uint16_t servo04_constrained;
+
+uint16_t servo01_Angle;
+uint16_t servo02_Angle;
+uint16_t servo03_Angle;
+uint16_t servo04_Angle;
+
 
 struct RECEIVE_DATA_STRUCTURE{
   //put your variable definitions here for the data you want to send
@@ -99,27 +139,44 @@ SEND_DATA_STRUCTURE mydata_send;
 RECEIVE_DATA_STRUCTURE mydata_remote;
 
 unsigned long previousMillis = 0;
-const long interval = 100;
+const long interval = 20;
+
+unsigned long previousServoMillis=0;
+const long servoInterval = 200;
 
 long previousSafetyMillis;
 
 SoftwareSerial bluetooth(BLUETOOTH_TX, BLUETOOTH_RX);
 
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+
 void setup() {
 
-  //Serial.begin(9600);
-  //Serial2.begin(9600);
   Serial.begin(Baud, SERIAL_8N1);
   Serial.println(" ");
   Serial.print("Sketch:   ");   Serial.println(__FILE__);
   Serial.print("Uploaded: ");   Serial.println(__DATE__);
 
-
-
   BT_to_serial_prepare();
-  //ET1.begin(details(mydata_send), &Serial2);
-  //ET2.begin(details(mydata_remote), &Serial2);
+	
+  Serial.println("setup:: Servo Initialization started");
+	delay(200);
+   //https://www.arduino.cc/reference/en/libraries/servo/writemicroseconds/
+   //value of 1000 is fully counter-clockwise, 2000 is fully clockwise, and 1500 is in the middle.
+   //so that servos often respond to values between 700 and 2300.
+    //servo01.attach( 4); //zakladna
+    //servo02.attach( 5);//spodne hnede rameno
+    //servo03.attach( 6);//horne  biela rameno
+    //servo04.attach( 7);//ruka nabok  100 = zhruba vodorovne
 
+    pwm.begin();
+  
+    pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
+
+
+	  Serial.println("setup: Servos attached");
+
+	  delay(20);
 
 }
 //----------------------------BT_to_serial_prepare-----------------------------------------
@@ -147,7 +204,6 @@ void BT_to_serial_prepare() {
 //----------------------------end of BT_to_serial_prepare----------------------------------
 
 void loop() {
-
    unsigned long currentMillis = millis();
        if (currentMillis - previousMillis >= interval) {  // start timed event for read and send
             previousMillis = currentMillis;
@@ -159,58 +215,89 @@ void loop() {
                 mydata_send.count = count;
 
                 ET1.sendData();                                           // send data back to remote       
-                
+                /*
                 Serial.println( "LX:"+String(mydata_remote.index_finger_knuckle_right)+
                               ", LY:"+String(mydata_remote.pinky_knuckle_right)+
                               ", RX:"+String(mydata_remote.index_finger_fingertip)+
                               ", RY:"+String(mydata_remote.index_finger_knuckle_left)+
                               ", count:"+String(count));
-            } // end of receive data
+                              */
 
-            else if(currentMillis - previousSafetyMillis > 200) {         // safeties
-                Serial.println("no data");
+              /*
+              //legLength = map(mydata_remote.RT,0,1023,380,650);
+              servo01_Microsecs = map(mydata_remote.index_finger_knuckle_right,0,1023,SERVO_MIN_MILISEC,SERVO_MAX_MILISEC);
+              servo02_Microsecs = map(mydata_remote.pinky_knuckle_right,0,1023,SERVO_MIN_MILISEC,SERVO_MAX_MILISEC);
+              servo03_Microsecs = map(mydata_remote.index_finger_fingertip,0,1023,SERVO_MIN_MILISEC,SERVO_MAX_MILISEC);
+              servo04_Microsecs = map(mydata_remote.index_finger_knuckle_left,0,1023,SERVO_MIN_MILISEC,SERVO_MAX_MILISEC);
+              */
+
+              //servo_MovingAverage01.Push(mydata_remote.index_finger_knuckle_right);
+              /*servo_MovingAverage02.Push(mydata_remote.pinky_knuckle_right);
+              servo_MovingAverage03.Push(mydata_remote.index_finger_fingertip);
+              servo_MovingAverage04.Push(mydata_remote.index_finger_knuckle_left);
+              */
+
+              //servo01_Avg = servo_MovingAverage01.MA();
+              /*servo02_Avg = servo_MovingAverage02.MA();
+              servo03_Avg = servo_MovingAverage03.MA();
+              servo04_Avg = servo_MovingAverage04.MA();
+              **/
+
+              //servo01_constrained = constrain(servo01_Avg, 0, 1023);
+              /*servo02_constrained = constrain(servo02_Avg, 0, 1023);
+              servo03_constrained = constrain(servo03_Avg, 0, 1023);
+              servo04_constrained = constrain(servo04_Avg, 0, 1023);
+              */
+
+              servo01_constrained = constrain(mydata_remote.index_finger_knuckle_right, 0, 1023);
+              servo02_constrained = constrain(mydata_remote.pinky_knuckle_right, 0, 1023);
+              servo03_constrained = constrain(mydata_remote.index_finger_fingertip, 0, 1023);
+              servo04_constrained = constrain(mydata_remote.index_finger_knuckle_left, 0, 1023);
+              
+
+              servo01_Angle = map(servo01_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
+              servo02_Angle = map(servo02_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
+              servo03_Angle = map(servo03_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
+              servo04_Angle = map(servo04_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
+              
+
+              /*
+              Serial.println(   "LX:"+String(mydata_remote.index_finger_knuckle_right) + ", S1avg:" + String(servo01_Avg) + ", S1constrained:" + String(servo01_constrained) + ", S1[us]:" + String(servo01_Microsecs) +
+                                ", count:"+ String(count));
+              */
+              
+              Serial.println(   "LX:"+String(mydata_remote.index_finger_knuckle_right)+ ", S1:" + String(servo01_Angle) +
+                            ",   LY:"+String(mydata_remote.pinky_knuckle_right       )+ ", S2:" + String(servo02_Angle) +
+                            ",   RX:"+String(mydata_remote.index_finger_fingertip    )+ ", S3:" + String(servo03_Angle) +
+                            ",   RY:"+String(mydata_remote.index_finger_knuckle_left )+ ", S4:" + String(servo04_Angle) +
+                            ", count:"+String(count));
+              
+             // end of receive data
+            } else if(currentMillis - previousSafetyMillis > 200) {         // safeties
+            //Serial.Println("No Data")
             }
 
             count = count+1;                                              // update count for remote monitoring
   
-            if (mydata_remote.menuUp == 1 && menuFlag == 0) {             // menu select handling & debounce
-              menuFlag = 1;
-              mode = mode+1;
-              mode = constrain(mode,0,5);
-            }            
-            else if (mydata_remote.menuDown == 1 && menuFlag == 0) {
-              menuFlag = 1;
-              mode = mode-1;
-              mode = constrain(mode,0,5);
-            }
-            else if (mydata_remote.menuDown == 0 && mydata_remote.menuUp == 0){
-              menuFlag = 0;
-            }
-            
-    
-            /*
-            // initial leg length calcs
-            legLength = map(mydata_remote.RT,0,1023,380,650);             // map control data to mm
+            //servo01.write(servo01_Angle);
 
-            kneeAngle = acos ( (sq(DIGITLENGTH) + sq(DIGITLENGTH) - sq(legLength)) / (2 * DIGITLENGTH * DIGITLENGTH) );          
-            kneeAngle = (kneeAngle * 4068) / 71;                          // convert radians to degrees
-            kneeAngle2a = kneeAngle - KNEEACTANGLE;                       // take away known angle
-            kneeAngle2 = (kneeAngle2a * 71) / 4068;                        // convert degrees to radians
 
-            kneeAngle3 = asin ( (KNEEROD2 * sin(kneeAngle2)/KNEEROD));
-            kneeAngle3a = (kneeAngle3 * 4068 / 71);                        // convert radians to degrees
-
-            kneeAngle4a = 180 - kneeAngle2a - kneeAngle3a;                  // we now know all four angles
-            kneeAngle4 = (kneeAngle4a * 71) / 4068;                        // convert degrees to radians
-
-            kneeActuator = (((sin(kneeAngle4)) * KNEEROD)) / sin(kneeAngle2);
-
-            Serial.print(legLength);
-            Serial.print(" , ");
-            Serial.println(kneeActuator);      
-            */
 
        }  // end of timed event
 
+      if (currentMillis - previousServoMillis >= servoInterval) {  // start timed event for read and send
+        previousServoMillis = currentMillis;
+        pwm.setPWM(0, 0, servo01_Angle);  //Servo 0
+        pwm.setPWM(1, 0, servo02_Angle);  //Servo 1
+        pwm.setPWM(2, 0, servo03_Angle);  //Servo 2
+        pwm.setPWM(3, 0, servo04_Angle);  //Servo 3
+      }
+
+}
+
+int angleToPulse(int ang){
+   int pulse = map(ang,0, 1024, SERVO_MIN,SERVO_MAX);// map angle of 0 to 180 to Servo min and Servo max 
+   Serial.println("Angle: "+String(ang)+",  pulse: "+String(pulse));
+   return pulse;
 }
 
