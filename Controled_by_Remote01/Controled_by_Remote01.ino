@@ -15,6 +15,7 @@
 EasyTransfer ET1;   // send serial
 EasyTransfer ET2;   // rec serial
 
+//https://robojax.com/learn/arduino/?vid=robojax_PCA9685-V1
 #define SERVO_MIN   135                // https://www.arduino.cc/reference/en/libraries/servo/writemicroseconds/
 #define SERVO_MAX   615                // value of 135 is fully counter-clockwise, 615 is fully clockwise.
 
@@ -91,7 +92,11 @@ uint16_t servo04_constrained;
 uint16_t servo01_Angle;
 uint16_t servo02_Angle;
 uint16_t servo03_Angle;
+
 uint16_t servo04_Angle;
+uint16_t servo05_Angle;
+uint16_t servo06_Angle;
+uint16_t servo07_Angle;
 
 
 struct RECEIVE_DATA_STRUCTURE{
@@ -161,7 +166,7 @@ void setup() {
   Serial.println("setup:: Servo Initialization started");
 	delay(200);
 
-    pwm.begin();
+    pwm.begin(); //pwm.begin(0);   0 = driver_ID
   
     pwm.setPWMFreq(60);  // Analog servos run at ~60 Hz updates
 
@@ -219,12 +224,21 @@ void loop() {
               servo03_constrained = constrain(mydata_remote.index_finger_fingertip, 0, 1023);
               servo04_constrained = constrain(mydata_remote.index_finger_knuckle_left, 0, 1023);
               
-
-              servo01_Angle = map(servo01_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
-              servo02_Angle = map(servo02_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
-              servo03_Angle = map(servo03_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
-              servo04_Angle = map(servo04_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
+              servo01_constrained = map(servo01_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
+              servo02_constrained = map(servo02_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
+              servo03_constrained = map(servo03_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
+              servo04_constrained = map(servo04_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
               
+              servo01_Angle = (servo01_constrained + servo02_constrained)/2;
+              servo02_Angle = (servo01_constrained + (1023 - servo02_constrained))/2;
+              servo03_Angle =  servo02_constrained;
+
+              servo04_Angle = map(servo01_Angle, 0, 1023, SERVO_MIN, SERVO_MAX);
+              servo05_Angle = map(servo02_Angle, 0, 1023, SERVO_MIN, SERVO_MAX);
+              servo06_Angle = map(servo03_Angle, 0, 1023, SERVO_MIN, SERVO_MAX);
+              servo07_Angle = map(servo04_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
+              
+
               /*
               Serial.println(   "LX:"+String(mydata_remote.index_finger_knuckle_right)+ ", S1:" + String(servo01_Angle) +
                             ",   LY:"+String(mydata_remote.pinky_knuckle_right       )+ ", S2:" + String(servo02_Angle) +
@@ -242,10 +256,28 @@ void loop() {
 
       if (currentMillis - previousServoMillis >= servoInterval) {  // start timed event for Servos  (200 ms)
         previousServoMillis = currentMillis;
-        pwm.setPWM(0, 0, servo01_Angle);  //Servo 0
-        pwm.setPWM(1, 0, servo02_Angle);  //Servo 1
-        pwm.setPWM(2, 0, servo03_Angle);  //Servo 2
-        pwm.setPWM(3, 0, servo04_Angle);  //Servo 3
+
+        pwm.setPWM( 0, 0, servo01_Angle);  //Servo 0
+        pwm.setPWM( 1, 0, servo02_Angle);  //Servo 1
+        pwm.setPWM( 2, 0, servo03_Angle);  //Servo 2
+
+        pwm.setPWM( 3, 0, servo01_Angle);  //Servo 0
+        pwm.setPWM( 4, 0, servo02_Angle);  //Servo 1
+        pwm.setPWM( 5, 0, servo03_Angle);  //Servo 2
+
+        pwm.setPWM( 6, 0, servo01_Angle);  //Servo 0
+        pwm.setPWM( 7, 0, servo02_Angle);  //Servo 1
+        pwm.setPWM( 8, 0, servo03_Angle);  //Servo 2
+
+        pwm.setPWM( 9, 0, servo01_Angle);  //Servo 0
+        pwm.setPWM(10, 0, servo02_Angle);  //Servo 1
+        pwm.setPWM(11, 0, servo03_Angle);  //Servo 2
+
+        pwm.setPWM(12, 0, servo04_Angle);  //Servo 3
+        pwm.setPWM(13, 0, servo05_Angle);  //Servo 4
+        pwm.setPWM(14, 0, servo06_Angle);  //Servo 3
+        pwm.setPWM(15, 0, servo07_Angle);  //Servo 4
+
       }
 
 }
