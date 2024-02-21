@@ -23,3 +23,15 @@
 
     return formData;
 	}
+
+	FormData MyLcd_ShowMeasuredData::showForm2(String leftJoystick_X, String rightJoystick_X, String leftJoystick_Y, String rightJoystick_Y, String btnsString, String lcdString3)
+  {
+    String lcdString0= "LX:"+leftJoystick_X+",RX"+rightJoystick_X+" ";
+	  String lcdString1= "LY:"+leftJoystick_Y+",RY"+rightJoystick_Y+" ";
+	  String lcdString2= btnsString;
+	//String lcdString3= "                    ";
+
+	FormData  formData(lcdString0, lcdString1, lcdString2, lcdString3);
+
+    return formData;
+	}

@@ -6,7 +6,7 @@ long y;
 long prevY;
 float delta_y;
 
-float delta_i;
+float delta_per_i;
 
 int lineCounter =0;
 void setup() {
@@ -14,24 +14,25 @@ void setup() {
   //while (!Serial.available());
 
   Serial.println("Start");
-  prevY = -1*MAXVAL;
+  prevY = -1*MAXVAL*INTERPOLATION;
+  prevY = prevY-10;
 
   for (int x=-MAXVAL; x<=MAXVAL; x++) {
     //y = x2 / ((512*512)/512);
     //y = pow(x,3);
 
-    y = INTERPOLATION * (pow(x,3)) /(MAXVAL * MAXVAL);
+    y = INTERPOLATION * ((pow(x,3)) /(MAXVAL * MAXVAL));
 
 
     //y = (x*x) /(MAXVAL);
     //y = (y*x) /(MAXVAL);
 
-    delta_i = (y-prevY)/INTERPOLATION;
+    delta_per_i = (y-prevY)/INTERPOLATION;
 
     for (int i=0; i<=(INTERPOLATION-1); i++) {
-      delta_y = delta_i *i;
-     //Serial.println("x+i ="+String((INTERPOLATION * x)+i)+",  y = "+String(int(y+delta_y))+" .");
-     Serial.print(String(int(y+delta_y))+", ");
+      delta_y = delta_per_i *i;
+     //Serial.println("x= "+String(x)+", i="+String(i)+", delta_per_i="+String(delta_per_i)+", delta_y="+String(delta_y)+",,,,  x+i ="+String((INTERPOLATION * x)+i)+",  y = "+String(int(y+delta_y)) );
+     Serial.print(String(int(y+delta_y)+512)+", ");
      prevY = y;
      
      lineCounter = lineCounter +1;

@@ -28,6 +28,7 @@ class MyLcd {
   void clear();
   void showSplashScreen();
   void showMeasuredDateScreen(int leftJoystick_X, int rightJoystick_X, int leftJoystick_Y, int rightJoystick_Y, String btnsString, String lcdString3);
+  void showMeasuredDateScreen2(int LJoyX, int LJoyY, int RJoyX, int RJoyY, int lLX, int lLY, int lRX, int lRY, String btnsString, String lcdString3);
   void formShow(FormData formData);
   void ShowNewForm(String lcdString0, String lcdString1, String lcdString2, String lcdString3);
   void formShow(String lcdString0, String lcdString1, String lcdString2, String lcdString3);

@@ -102,3 +102,13 @@ void MyLcd::showMeasuredDateScreen(int leftJoystick_X, int rightJoystick_X, int 
   //Serial.println("showMeasuredDateScreen");
   MyLcd::formShow(myLcdShowMeasuredData.showForm(leftJoystick_X, rightJoystick_X, leftJoystick_Y, rightJoystick_Y, btnsString, lcdString3));
 }
+
+void MyLcd::showMeasuredDateScreen2(int LJoyX, int LJoyY, int RJoyX, int RJoyY, int lLX, int lLY, int lRX, int lRY, String btnsString, String lcdString3) {
+  //Serial.println("showMeasuredDateScreen");
+  String LX_str = String(lLX)+"/"+String(LJoyX);
+  String LY_str = String(lLY)+"/"+String(LJoyY);
+  String RX_str = String(lRX)+"/"+String(RJoyX);
+  String RY_str = String(lRY)+"/"+String(RJoyY);
+  FormData formData= myLcdShowMeasuredData.showForm2(LX_str, RX_str, LY_str, RY_str, btnsString, lcdString3);
+  MyLcd::formShow(formData);
+}
