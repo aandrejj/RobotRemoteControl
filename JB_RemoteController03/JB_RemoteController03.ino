@@ -320,6 +320,7 @@ void BtWriteEvent(unsigned long currentMillis) {
     if(showForm == form_ShowMeasuredData){
       String btnsString = "Btns:"+String(button1)+" "+String(button2)+" "+String(button3)+" "+String(button4)+" "+String(button5)+" "+String(rotary_key);
       myLcd.showMeasuredDateScreen(leftJoystick_X, rightJoystick_X, leftJoystick_Y, rightJoystick_Y, btnsString, "");
+      //myLcd.showMeasuredDateScreen2(leftJoystick_X,leftJoystick_Y, rightJoystick_X, rightJoystick_Y, mydata_send.index_finger_knuckle_right, mydata_send.pinky_knuckle_right, mydata_send.index_finger_fingertip,mydata_send.index_finger_knuckle_left, btnsString, "");
     }
 }
 //------------------end of BtWriteEvnet-------------------------------------
@@ -512,6 +513,10 @@ void at_con_adr1_cmd() {
   Serial.println("at_con_adr1");
   execute_AT_command("AT+CON3CA308B4E3B5");  
 }
+void at_con_adr2_cmd() {
+  Serial.println("at_con_adr2");
+  execute_AT_command("AT+CON0CB2B766319C");  
+}
 
 void hide_menu() {
   Serial.println("hide menu");
@@ -592,12 +597,19 @@ void ReadHwData() {
     leftJoystick_Y = analogRead(A1);
     rightJoystick_X = analogRead(A2);
     rightJoystick_Y = analogRead(A3);
+    /*
+    mydata_send.index_finger_fingertip = lookup[rightJoystick_X];
+    mydata_send.index_finger_knuckle_left = lookup[rightJoystick_Y];
+    mydata_send.index_finger_knuckle_right = lookup[leftJoystick_X];
+    mydata_send.pinky_knuckle_right = lookup[leftJoystick_Y];
+    */
 
+    
     mydata_send.index_finger_fingertip = rightJoystick_X;
     mydata_send.index_finger_knuckle_left = rightJoystick_Y;
     mydata_send.index_finger_knuckle_right = leftJoystick_X;
     mydata_send.pinky_knuckle_right = leftJoystick_Y;
-
+    
 
 }
 //--------------end of ReadHwData------------------------------------
