@@ -513,6 +513,10 @@ void at_con_adr1_cmd() {
   Serial.println("at_con_adr1");
   execute_AT_command("AT+CON3CA308B4E3B5");  
 }
+void at_con_adr2_cmd() {
+  Serial.println("at_con_adr2");
+  execute_AT_command("AT+CON0CB2B766319C");  
+}
 
 void hide_menu() {
   Serial.println("hide menu");
