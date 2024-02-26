@@ -570,15 +570,15 @@ void ReadHwData() {
     }
 
     if (button2 == 0) {
-      mydata_send.Select = 1;
-    } else {
-      mydata_send.Select = 0;
-    }
-
-    if (button3 == 0) {
       mydata_send.menuUp = 1;
     } else {
       mydata_send.menuUp = 0;
+    }
+
+    if (button3 == 0) {
+      mydata_send.Select = 1;
+    } else {
+      mydata_send.Select = 0;
     }
 
     if (button4 == 0) {
