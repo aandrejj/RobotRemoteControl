@@ -597,20 +597,11 @@ void ReadHwData() {
     leftJoystick_Y = analogRead(A1);
     rightJoystick_X = analogRead(A2);
     rightJoystick_Y = analogRead(A3);
-    /*
-    mydata_send.index_finger_fingertip = lookup[rightJoystick_X];
-    mydata_send.index_finger_knuckle_left = lookup[rightJoystick_Y];
-    mydata_send.index_finger_knuckle_right = lookup[leftJoystick_X];
-    mydata_send.pinky_knuckle_right = lookup[leftJoystick_Y];
-    */
-
     
-    mydata_send.index_finger_fingertip = rightJoystick_X;
-    mydata_send.index_finger_knuckle_left = rightJoystick_Y;
-    mydata_send.index_finger_knuckle_right = leftJoystick_X;
-    mydata_send.pinky_knuckle_right = leftJoystick_Y;
-    
-
+    mydata_send.stick1_X = leftJoystick_X;
+    mydata_send.stick1_Y = leftJoystick_Y;
+    mydata_send.stick2_X = rightJoystick_X;
+    mydata_send.stick2_Y = rightJoystick_Y;
 }
 //--------------end of ReadHwData------------------------------------
 
