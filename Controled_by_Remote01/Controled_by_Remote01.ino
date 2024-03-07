@@ -172,17 +172,17 @@ void loop() {
 
                 ET1.sendData();                                           // send data back to remote       
                 /*
-                Serial.println( "LX:"+String(mydata_remote.index_finger_knuckle_right)+
-                              ", LY:"+String(mydata_remote.pinky_knuckle_right)+
-                              ", RX:"+String(mydata_remote.index_finger_fingertip)+
-                              ", RY:"+String(mydata_remote.index_finger_knuckle_left)+
+                Serial.println( "LX:"+String(mydata_remote.stick1_X)+
+                              ", LY:"+String(mydata_remote.stick1_Y)+
+                              ", RX:"+String(mydata_remote.stick2_X)+
+                              ", RY:"+String(mydata_remote.stick2_Y)+
                               ", count:"+String(count));
                               */
 
-              servo01_constrained = constrain(mydata_remote.index_finger_knuckle_right, 0, 1023);
-              servo02_constrained = constrain(mydata_remote.pinky_knuckle_right, 0, 1023);
-              servo03_constrained = constrain(mydata_remote.index_finger_fingertip, 0, 1023);
-              servo04_constrained = constrain(mydata_remote.index_finger_knuckle_left, 0, 1023);
+              servo01_constrained = constrain(mydata_remote.stick1_X, 0, 1023);
+              servo02_constrained = constrain(mydata_remote.stick1_Y, 0, 1023);
+              servo03_constrained = constrain(mydata_remote.stick2_X, 0, 1023);
+              servo04_constrained = constrain(mydata_remote.stick2_Y, 0, 1023);
               
               servo01_constrained = map(servo01_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
               servo02_constrained = map(servo02_constrained, 0, 1023, SERVO_MIN, SERVO_MAX);
@@ -200,10 +200,10 @@ void loop() {
               
 
               /*
-              Serial.println(   "LX:"+String(mydata_remote.index_finger_knuckle_right)+ ", S1:" + String(servo01_Angle) +
-                            ",   LY:"+String(mydata_remote.pinky_knuckle_right       )+ ", S2:" + String(servo02_Angle) +
-                            ",   RX:"+String(mydata_remote.index_finger_fingertip    )+ ", S3:" + String(servo03_Angle) +
-                            ",   RY:"+String(mydata_remote.index_finger_knuckle_left )+ ", S4:" + String(servo04_Angle) +
+              Serial.println(   "LX:"+String(mydata_remote.stick1_X)+ ", S1:" + String(servo01_Angle) +
+                            ",   LY:"+String(mydata_remote.stick1_Y       )+ ", S2:" + String(servo02_Angle) +
+                            ",   RX:"+String(mydata_remote.stick2_X    )+ ", S3:" + String(servo03_Angle) +
+                            ",   RY:"+String(mydata_remote.stick2_Y )+ ", S4:" + String(servo04_Angle) +
                             ", count:"+String(count));
               */
              // end of receive data

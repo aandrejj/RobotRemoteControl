@@ -9,26 +9,13 @@ struct RECEIVE_DATA_STRUCTURE{
     bool toggleTop; 
     int mode;  
 
-    int16_t thumb_fingertip;
-    int16_t thumb_knuckle_left;
-    int16_t thumb_knuckle_right;
+    int16_t stick1_X;
+    int16_t stick1_Y;
+    bool    stick1_Btn;
 
-    int16_t index_finger_fingertip;
-    int16_t index_finger_knuckle_left;
-    int16_t index_finger_knuckle_right;
-
-    int16_t middle_finger_fingertip;
-    int16_t middle_finger_knuckle_left;
-    int16_t middle_finger_knuckle_right;
-    
-    int16_t ring_finger_fingertip;
-    int16_t ring_finger_knuckle_left;
-    int16_t ring_finger_knuckle_right;
-
-    int16_t pinky_fingertip;
-    int16_t pinky_knuckle_left;
-    int16_t pinky_knuckle_right;
-
+    int16_t stick2_X;
+    int16_t stick2_Y;
+    bool    stick2_Btn;
 };
 
 struct SEND_DATA_STRUCTURE{
