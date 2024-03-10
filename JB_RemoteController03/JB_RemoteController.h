@@ -11,6 +11,15 @@
 #define BUTTON4 33
 #define BUTTON5 32
 
+#define NAV_KEY_UP 46
+#define NAV_KEY_DWN 48
+#define NAV_KEY_LFT 50
+#define NAV_KEY_RHT 52
+#define NAV_KEY_MID 53
+#define NAV_KEY_SET 51
+#define NAV_KEY_RST 49
+
+
 #define BLUETOOTH_SWITCH 35
 #define DISPLAY_SWITCH 30
 
@@ -27,7 +36,6 @@
 #define SWITCH4Down 57
 #define SWITCH5Down 58
 #define SWITCH6Down 59
-
 
 
 // Outcomment line below for HM-10, HM-19 etc
@@ -57,7 +65,6 @@
 #define BACK 55   // NUMPAD 7
 
 
-
 bool rotary_key;
 bool previous_rotary_key;
 bool button1;
@@ -65,6 +72,14 @@ bool button2;
 bool button3;
 bool button4;
 bool button5;
+
+bool navKeyUp    ;
+bool navKeyDown  ;
+bool navKeyLeft  ;
+bool navKeyRight ;
+bool navKeyMiddle;
+bool navKeySet   ;
+bool navKeyReset ;
 
 bool bluetooth_On;
 bool previous_Bluetooth_State;
