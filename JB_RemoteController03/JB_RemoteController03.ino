@@ -318,7 +318,9 @@ void BtWriteEvent(unsigned long currentMillis) {
     }
     
     if(showForm == form_ShowMeasuredData){
-      String btnsString = "Btns:"+String(button1)+" "+String(button2)+" "+String(button3)+" "+String(button4)+" "+String(button5)+" "+String(rotary_key);
+      String btnsString = "Btn"+String(button1)+""+String(button2)+""+String(button3)+""+String(button4)+""+String(button5)+""+String(rotary_key);
+      btnsString = btnsString +" Nav"+ String(navKeyUp)+""+String(navKeyDown)+""+String(navKeyLeft)+""+String(navKeyRight)+""+String(navKeyMiddle)+""+String(navKeySet)+""+String(navKeyReset);
+
       myLcd.showMeasuredDateScreen(leftJoystick_X, rightJoystick_X, leftJoystick_Y, rightJoystick_Y, btnsString, "");
       //myLcd.showMeasuredDateScreen2(leftJoystick_X,leftJoystick_Y, rightJoystick_X, rightJoystick_Y, mydata_send.index_finger_knuckle_right, mydata_send.pinky_knuckle_right, mydata_send.index_finger_fingertip,mydata_send.index_finger_knuckle_left, btnsString, "");
     }
@@ -563,6 +565,14 @@ void ReadHwData() {
     button4 =  digitalRead(BUTTON4);
     button5 =  digitalRead(BUTTON5);
 
+    navKeyUp    =  digitalRead(NAV_KEY_UP);
+    navKeyDown  =  digitalRead(NAV_KEY_DWN);
+    navKeyLeft  =  digitalRead(NAV_KEY_LFT);
+    navKeyRight =  digitalRead(NAV_KEY_RHT);
+    navKeyMiddle=  digitalRead(NAV_KEY_MID);
+    navKeySet   =  digitalRead(NAV_KEY_SET);
+    navKeyReset =  digitalRead(NAV_KEY_RST);
+
     if (button1 == 0) {
       mydata_send.menuDown = 1;
     } else {
@@ -593,6 +603,48 @@ void ReadHwData() {
       mydata_send.toggleTop = 0;
     }
 
+    if (navKeyUp == 0) {
+      mydata_send.navKeyUp = 1;
+    } else {
+      mydata_send.navKeyUp = 0;
+    }
+
+    if (navKeyDown == 0) {
+      mydata_send.navKeyDown = 1;
+    } else {
+      mydata_send.navKeyDown = 0;
+    }
+    
+    if (navKeyLeft == 0) {
+      mydata_send.navKeyLeft = 1;
+    } else {
+      mydata_send.navKeyLeft = 0;
+    }
+    
+    if (navKeyRight == 0) {
+      mydata_send.navKeyRight = 1;
+    } else {
+      mydata_send.navKeyRight = 0;
+    }
+    
+    if (navKeyMiddle == 0) {
+      mydata_send.navKeyMiddle = 1;
+    } else {
+      mydata_send.navKeyMiddle = 0;
+    }
+    
+    if (navKeySet == 0) {
+      mydata_send.navKeySet = 1;
+    } else {
+      mydata_send.navKeySet = 0;
+    }
+    
+    if (navKeyReset == 0) {
+      mydata_send.navKeyReset = 1;
+    } else {
+      mydata_send.navKeyReset = 0;
+    }
+    
     leftJoystick_X = analogRead(A0);
     leftJoystick_Y = analogRead(A1);
     rightJoystick_X = analogRead(A2);
@@ -680,6 +732,15 @@ void Init_PinModes()
   pinMode(SWITCH4Down, INPUT_PULLUP);
   pinMode(SWITCH5Down, INPUT_PULLUP);
   pinMode(SWITCH6Down, INPUT_PULLUP);
+
+  pinMode(NAV_KEY_UP, INPUT_PULLUP);
+  pinMode(NAV_KEY_DWN, INPUT_PULLUP);
+  pinMode(NAV_KEY_LFT, INPUT_PULLUP);
+  pinMode(NAV_KEY_RHT, INPUT_PULLUP);
+  pinMode(NAV_KEY_MID, INPUT_PULLUP);
+  pinMode(NAV_KEY_SET, INPUT_PULLUP);
+  pinMode(NAV_KEY_RST, INPUT_PULLUP);
+
 
   pinMode(A0, INPUT);
   pinMode(A1, INPUT);
