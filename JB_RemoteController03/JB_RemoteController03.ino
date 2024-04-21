@@ -318,8 +318,8 @@ void BtWriteEvent(unsigned long currentMillis) {
     }
     
     if(showForm == form_ShowMeasuredData){
-      String btnsString = "Btn"+String(button1)+""+String(button2)+""+String(button3)+""+String(button4)+""+String(button5)+""+String(rotary_key);
-      btnsString = btnsString +" Nav"+ String(navKeyUp)+""+String(navKeyDown)+""+String(navKeyLeft)+""+String(navKeyRight)+""+String(navKeyMiddle)+""+String(navKeySet)+""+String(navKeyReset);
+      String btnsString = "SwU"+String(switch1Up)+String(switch2Up)+String(switch3Up)+""+String(switch4Up)+String(switch5Up)+" SwD"+ String(switch1Down)+""+String(switch2Down)+""+String(switch3Down)+""+String(switch4Down)+String(switch5Down);
+      //String btnsString = "Btn"+String(button1)+""+String(button2)+""+String(button3)+""+String(button4)+""+String(button5)+""+String(rotary_key) +" Nav"+ String(navKeyUp)+""+String(navKeyDown)+""+String(navKeyLeft)+""+String(navKeyRight)+""+String(navKeyMiddle)+""+String(navKeySet)+""+String(navKeyReset);
 
       myLcd.showMeasuredDateScreen(leftJoystick_X, rightJoystick_X, leftJoystick_Y, rightJoystick_Y, btnsString, "");
       //myLcd.showMeasuredDateScreen2(leftJoystick_X,leftJoystick_Y, rightJoystick_X, rightJoystick_Y, mydata_send.index_finger_knuckle_right, mydata_send.pinky_knuckle_right, mydata_send.index_finger_fingertip,mydata_send.index_finger_knuckle_left, btnsString, "");
@@ -573,6 +573,64 @@ void ReadHwData() {
     navKeySet   =  digitalRead(NAV_KEY_SET);
     navKeyReset =  digitalRead(NAV_KEY_RST);
 
+     bt_switch =  digitalRead(BLUETOOTH_SWITCH);
+     disp_switch =  digitalRead(DISPLAY_SWITCH);
+
+     switch1Up =  digitalRead(SWITCH1Up);
+     switch2Up =  digitalRead(SWITCH2Up);
+     switch3Up =  digitalRead(SWITCH3Up);
+     switch4Up =  digitalRead(SWITCH4Up);
+     switch5Up =  digitalRead(SWITCH5Up);
+
+     switch1Down =  digitalRead(SWITCH1Down);
+     switch2Down =  digitalRead(SWITCH2Down);
+     switch3Down =  digitalRead(SWITCH3Down);
+     switch4Down =  digitalRead(SWITCH4Down);
+     switch5Down =  digitalRead(SWITCH5Down);
+
+    tmp_mode = 0;
+    if(switch1Up == 0) {
+      tmp_mode = tmp_mode + 1;
+    }
+
+    if(switch2Up == 0) {
+      tmp_mode = tmp_mode + 2;
+    }
+
+    if(switch3Up == 0) {
+      tmp_mode = tmp_mode + 4;
+    }
+
+    if(switch4Up == 0) {
+      tmp_mode = tmp_mode + 8;
+    }
+
+    if(switch5Up == 0) {
+      tmp_mode = tmp_mode + 16;
+    }
+
+    if(switch1Down == 0) {
+      tmp_mode = tmp_mode + 32;
+    }
+
+    if(switch2Down == 0) {
+      tmp_mode = tmp_mode + 64;
+    }
+
+    if(switch3Down == 0) {
+      tmp_mode = tmp_mode + 128;
+    }
+
+    if(switch4Down == 0) {
+      tmp_mode = tmp_mode + 256;
+    }
+
+    if(switch5Down == 0) {
+      tmp_mode = tmp_mode + 512;
+    }
+
+    mydata_send.mode = tmp_mode;
+
     if (button1 == 0) {
       mydata_send.menuDown = 1;
     } else {
@@ -645,6 +703,8 @@ void ReadHwData() {
       mydata_send.navKeyReset = 0;
     }
     
+
+
     leftJoystick_X = analogRead(A0);
     leftJoystick_Y = analogRead(A1);
     rightJoystick_X = analogRead(A2);
@@ -659,49 +719,8 @@ void ReadHwData() {
 
 //---------------------ShowDataOnDisplay----------------------------------------
 void ShowDataOnDisplay() {
-  count = String(mydata_remote.count);
-
-  if (mydata_remote.mode == 0) {
-    //lcd.setCursor(0,3);
-    //lcd.print("Mode 0 - Kin Test   "+String(count));
-    //lcd.setCursor(0,1);
-    //lcd.print("                    ");
-    myLcd.formShow("", "", "", "Mode0 - Test "+String(count));
-  }
-  else if (mydata_remote.mode == 1) {
-    lcd.setCursor(0,0);
-    lcd.print("Mode 1 - Walk #1    ");
-    lcd.setCursor(0,1);
-    lcd.print("                    ");
-  }
-  else if (mydata_remote.mode == 2) {
-    lcd.setCursor(0,0);
-    lcd.print("Mode 2 -            ");
-    lcd.setCursor(0,1);
-    lcd.print("                    ");
-  }
-  else if (mydata_remote.mode == 3) {
-    lcd.setCursor(0,0);
-    lcd.print("Mode 3 -            ");
-    lcd.setCursor(0,1);
-    lcd.print("                    ");
-  }
-  else if (mydata_remote.mode == 4) {
-    lcd.setCursor(0,0);
-    lcd.print("Mode 4 -            ");
-    lcd.setCursor(0,1);
-    lcd.print("                    ");
-  }
-  else if (mydata_remote.mode == 5) {
-    lcd.setCursor(0,0);
-    lcd.print("Mode 5 -            ");
-    lcd.setCursor(0,1);
-    lcd.print("                    ");
-  }
-  else{
-    lcd.setCursor(0,3);
-    lcd.print(count);
-  }
+    count = String(mydata_remote.count);
+    myLcd.formShow("", "", "", "Mode:"+String(mydata_send.mode)+",  Cnt:"+String(count));
 }
 //----------------------end of ShowDataOnDisplay--------------------------------
 
@@ -714,7 +733,6 @@ void Init_PinModes()
   pinMode(BUTTON3, INPUT_PULLUP);
   pinMode(BUTTON4, INPUT_PULLUP);
   pinMode(BUTTON5, INPUT_PULLUP);
-  //pinMode(52, INPUT_PULLUP);
   
   pinMode(BLUETOOTH_SWITCH, INPUT_PULLUP);
   pinMode(DISPLAY_SWITCH, INPUT_PULLUP);
@@ -724,14 +742,12 @@ void Init_PinModes()
   pinMode(SWITCH3Up, INPUT_PULLUP);
   pinMode(SWITCH4Up, INPUT_PULLUP);
   pinMode(SWITCH5Up, INPUT_PULLUP);
-  pinMode(SWITCH6Up, INPUT_PULLUP);
 
   pinMode(SWITCH1Down, INPUT_PULLUP);
   pinMode(SWITCH2Down, INPUT_PULLUP);
   pinMode(SWITCH3Down, INPUT_PULLUP);
   pinMode(SWITCH4Down, INPUT_PULLUP);
   pinMode(SWITCH5Down, INPUT_PULLUP);
-  pinMode(SWITCH6Down, INPUT_PULLUP);
 
   pinMode(NAV_KEY_UP, INPUT_PULLUP);
   pinMode(NAV_KEY_DWN, INPUT_PULLUP);
@@ -746,10 +762,6 @@ void Init_PinModes()
   pinMode(A1, INPUT);
   pinMode(A2, INPUT);
   pinMode(A3, INPUT);
-
-  //pinMode(3, INPUT); // BT state
-
-  //digitalWrite(2, LOW); // turn off LED
 
 }
 //--------------------end of Init_PinModes--------------------------------

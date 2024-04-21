@@ -23,19 +23,17 @@
 #define BLUETOOTH_SWITCH 35
 #define DISPLAY_SWITCH 30
 
-#define SWITCH1Up 20
-#define SWITCH2Up 49
-#define SWITCH3Up 50
-#define SWITCH4Up 51
-#define SWITCH5Up 52
-#define SWITCH6Up 53
+#define SWITCH1Up 30
+#define SWITCH2Up 22
+#define SWITCH3Up 26
+#define SWITCH4Up 24
+#define SWITCH5Up 28
 
-#define SWITCH1Down 54
-#define SWITCH2Down 55
-#define SWITCH3Down 56
-#define SWITCH4Down 57
-#define SWITCH5Down 58
-#define SWITCH6Down 59
+#define SWITCH1Down 31
+#define SWITCH2Down 23
+#define SWITCH3Down 27
+#define SWITCH4Down 25
+#define SWITCH5Down 29
 
 
 // Outcomment line below for HM-10, HM-19 etc
@@ -81,6 +79,23 @@ bool navKeyMiddle;
 bool navKeySet   ;
 bool navKeyReset ;
 
+bool bt_switch;
+bool disp_switch;
+
+bool switch1Up;
+bool switch2Up;
+bool switch3Up;
+bool switch4Up;
+bool switch5Up;
+
+bool switch1Down;
+bool switch2Down;
+bool switch3Down;
+bool switch4Down;
+bool switch5Down;
+
+int tmp_mode;
+
 bool bluetooth_On;
 bool previous_Bluetooth_State;
 bool bluetooth_initialized;
@@ -93,21 +108,6 @@ byte showForm;
 
 bool showDataOnDisplay;
 bool menuIsShown;
-
-bool switch1Up;
-bool switch2Up;
-bool switch3Up;
-bool switch4Up;
-bool switch5Up;
-bool switch6Up;
-
-bool switch1Down;
-bool switch2Down;
-bool switch3Down;
-bool switch4Down;
-bool switch5Down;
-bool switch6Down;
-
 
 int rightJoystick_X;
 int rightJoystick_Y;
