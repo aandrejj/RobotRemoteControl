@@ -113,10 +113,15 @@ byte showForm;
 bool showDataOnDisplay;
 bool menuIsShown;
 
-int rightJoystick_X;
-int rightJoystick_Y;
-int leftJoystick_X;
-int leftJoystick_Y;
+int rightJoystick1_X;
+int rightJoystick1_Y;
+int leftJoystick1_X;
+int leftJoystick1_Y;
+
+int rightJoystick2_X;
+int rightJoystick2_Y;
+int leftJoystick2_X;
+int leftJoystick2_Y;
 
 String count;
 
