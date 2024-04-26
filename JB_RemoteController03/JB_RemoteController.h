@@ -20,7 +20,7 @@
 #define NAV_KEY_RST 49
 
 
-//#define BLUETOOTH_SWITCH 35
+#define BLUETOOTH_SWITCH 35
 #define DISPLAY_SWITCH 30
 
 #define SWITCH1Up 30
@@ -28,14 +28,12 @@
 #define SWITCH3Up 26
 #define SWITCH4Up 24
 #define SWITCH5Up 28
-#define SWITCH6Up 34
 
 #define SWITCH1Down 31
 #define SWITCH2Down 23
 #define SWITCH3Down 27
 #define SWITCH4Down 25
 #define SWITCH5Down 29
-#define SWITCH6Down 35
 
 
 // Outcomment line below for HM-10, HM-19 etc
@@ -89,14 +87,12 @@ bool switch2Up;
 bool switch3Up;
 bool switch4Up;
 bool switch5Up;
-bool switch6Up;
 
 bool switch1Down;
 bool switch2Down;
 bool switch3Down;
 bool switch4Down;
 bool switch5Down;
-bool switch6Down;
 
 int tmp_mode;
 
@@ -113,15 +109,15 @@ byte showForm;
 bool showDataOnDisplay;
 bool menuIsShown;
 
-int rightJoystick1_X;
-int rightJoystick1_Y;
-int leftJoystick1_X;
-int leftJoystick1_Y;
+int  leftUpJoystick_X;
+int  leftUpJoystick_Y;
+int rightUpJoystick_X;
+int rightUpJoystick_Y;
 
-int rightJoystick2_X;
-int rightJoystick2_Y;
-int leftJoystick2_X;
-int leftJoystick2_Y;
+int  leftDownJoystick_X;
+int  leftDownJoystick_Y;
+int rightDownJoystick_X;
+int rightDownJoystick_Y;
 
 String count;
 

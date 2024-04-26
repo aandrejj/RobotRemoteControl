@@ -93,14 +93,18 @@ void setup() {
   bluetooth_connecting = false;
   bluetooth_connected = false;
 
+  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
   showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
-  //Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
+  Serial.print("bluetooth_On = "+ String(bluetooth_On));
+  Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
    
+  if(bluetooth_On) {
     //Serial.println("Bluetooth initialisation....");
 
     BT_to_serial_prepare();
 
     //Serial.println("Bluetooth available.");
+  }
   //previous_Bluetooth_State = bluetooth_On;
 
   //menuIsShown = false;
@@ -146,7 +150,7 @@ void BT_to_serial_prepare() {
     ET2.begin(details(mydata_remote), &bluetooth);
     bluetooth_initialized = true;
     Serial.println("Bluetooth available.");
-    //previous_Bluetooth_State = bluetooth_On;
+    previous_Bluetooth_State = bluetooth_On;
     
 }
 //----------------------------end of BT_to_serial_prepare----------------------------------
@@ -242,7 +246,7 @@ bool BtLedIsSteadyOn = false;
 
 //---------------------check_bt_from_loop--------------------------
 bool check_bt_from_loop(unsigned long currentMillis) {
-  //if(bluetooth_On) {
+  if(bluetooth_On) {
       // check to see if BT is paired
       state = digitalRead(STATE);
       
@@ -265,12 +269,12 @@ bool check_bt_from_loop(unsigned long currentMillis) {
           lcd.print(" BT Paired to Robot ");
         }
       }
-  //} else {
-  //  if(showForm == form_ShowMeasuredData) {
-  //    lcd.setCursor(0,3);
-  //    lcd.print(" BT:"+String(bluetooth_On)+  ", Displ:"+String(showDataOnDisplay));
-  //  }
-  //}// end of if bluetooth_On
+    } else {
+      if(showForm == form_ShowMeasuredData) {
+        lcd.setCursor(0,3);
+        lcd.print(" BT:"+String(bluetooth_On)+  ", Displ:"+String(showDataOnDisplay));
+      }
+  }// end of if bluetooth_On
   return bt_State;
 }
 //-----------------------end of   check_bt_from_loop---------------------------------
@@ -302,18 +306,25 @@ bool Bt_state_checker(unsigned long currentMillis, bool previousState, bool newS
 //------------------BtWriteEvent-------------------------------------
 
 void BtWriteEvent(unsigned long currentMillis) {
-    bool dataSent = false;    
-    //if(bluetooth_On){
+    bool dataSent = false; 
+    if (Serial.available()) {
+      Serial.print("bluetooth_On = "+ String(bluetooth_On));
+      Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
+    }
+   
+    if(bluetooth_On){
       dataSent = true;
       ET1.sendData();
-    //}
+    }
     
     if(showForm == form_ShowMeasuredData){
       String btnsString = "SwU"+String(switch1Up)+String(switch2Up)+String(switch3Up)+""+String(switch4Up)+String(switch5Up)+" SwD"+ String(switch1Down)+""+String(switch2Down)+""+String(switch3Down)+""+String(switch4Down)+String(switch5Down);
       //String btnsString = "Btn"+String(button1)+""+String(button2)+""+String(button3)+""+String(button4)+""+String(button5)+""+String(rotary_key) +" Nav"+ String(navKeyUp)+""+String(navKeyDown)+""+String(navKeyLeft)+""+String(navKeyRight)+""+String(navKeyMiddle)+""+String(navKeySet)+""+String(navKeyReset);
-      
-      //myLcd.showMeasuredDateScreen(leftJoystick1_X, rightJoystick1_X, leftJoystick1_Y, rightJoystick1_Y, btnsString, "");
-      myLcd.showMeasuredDateScreen(leftJoystick2_X, rightJoystick2_X, leftJoystick2_Y, rightJoystick2_Y, btnsString, "");
+
+      myLcd.showMeasuredDateScreen4(leftUpJoystick_X, rightUpJoystick_X, leftDownJoystick_X, rightDownJoystick_X, leftUpJoystick_Y, rightUpJoystick_Y, leftDownJoystick_Y, rightDownJoystick_Y, btnsString, "");
+      //myLcd.showMeasuredDateScreen(leftUpJoystick_X, rightUpJoystick_X, leftUpJoystick_Y, rightUpJoystick_Y, btnsString, "");
+      //myLcd.showMeasuredDateScreen(leftJoystick3_X, rightJoystick4_X, leftJoystick3_Y, rightJoystick4_Y, btnsString, "");
+
       //myLcd.showMeasuredDateScreen2(leftJoystick_X,leftJoystick_Y, rightJoystick_X, rightJoystick_Y, mydata_send.index_finger_knuckle_right, mydata_send.pinky_knuckle_right, mydata_send.index_finger_fingertip,mydata_send.index_finger_knuckle_left, btnsString, "");
     }
 }
@@ -322,11 +333,11 @@ void BtWriteEvent(unsigned long currentMillis) {
 //------------------BtReadEvent-------------------------------------------
 bool BtReadEvent() {
   bool _newDataReceived = false;
-    //if(bluetooth_On) {
+    if(bluetooth_On) {
       if(ET2.receiveData()){
         _newDataReceived = true;
       } //end of if ET.receivedData()
-    //}// end of if bluetooth_On          
+    }// end of if bluetooth_On          
     return _newDataReceived;
 }
 //------------------end of BtReadEvent-------------------------------------------
@@ -421,16 +432,16 @@ void loop_Handling_rotary_key() {
 void loop() {
 
   unsigned long currentMillis = millis();
-  //bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
-  //showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
+  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
+  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
   button1 =  digitalRead(BUTTON1);
   button3 =  digitalRead(BUTTON3);
 
-  if((!previous_Bluetooth_State) ) {
+  if((!previous_Bluetooth_State) && (bluetooth_On)) {
     BT_to_serial_prepare();
   }
     
-  if(bluetooth_initialized) {
+  if(bluetooth_On && bluetooth_initialized) {
     if(showForm != form_Menu) {
       if(!button1) {
         Serial.println("Button1: menu.back, menu.show");
@@ -565,19 +576,20 @@ void ReadHwData() {
     navKeySet   =  digitalRead(NAV_KEY_SET);
     navKeyReset =  digitalRead(NAV_KEY_RST);
 
+     bt_switch =  digitalRead(BLUETOOTH_SWITCH);
+     disp_switch =  digitalRead(DISPLAY_SWITCH);
+
      switch1Up =  digitalRead(SWITCH1Up);
      switch2Up =  digitalRead(SWITCH2Up);
      switch3Up =  digitalRead(SWITCH3Up);
      switch4Up =  digitalRead(SWITCH4Up);
      switch5Up =  digitalRead(SWITCH5Up);
-     switch6Up =  digitalRead(SWITCH6Up);
 
      switch1Down =  digitalRead(SWITCH1Down);
      switch2Down =  digitalRead(SWITCH2Down);
      switch3Down =  digitalRead(SWITCH3Down);
      switch4Down =  digitalRead(SWITCH4Down);
      switch5Down =  digitalRead(SWITCH5Down);
-     switch6Down =  digitalRead(SWITCH6Down);
 
     tmp_mode = 0;
     if(switch1Up == 0) {
@@ -600,32 +612,24 @@ void ReadHwData() {
       tmp_mode = tmp_mode + 16;
     }
 
-    if(switch6Up == 0) {
+    if(switch1Down == 0) {
       tmp_mode = tmp_mode + 32;
     }
 
-    if(switch1Down == 0) {
+    if(switch2Down == 0) {
       tmp_mode = tmp_mode + 64;
     }
 
-    if(switch2Down == 0) {
+    if(switch3Down == 0) {
       tmp_mode = tmp_mode + 128;
     }
 
-    if(switch3Down == 0) {
+    if(switch4Down == 0) {
       tmp_mode = tmp_mode + 256;
     }
 
-    if(switch4Down == 0) {
-      tmp_mode = tmp_mode + 512;
-    }
-
     if(switch5Down == 0) {
-      tmp_mode = tmp_mode + 1024;
-    }
-
-    if(switch6Down == 0) {
-      tmp_mode = tmp_mode + 2048;
+      tmp_mode = tmp_mode + 512;
     }
 
     mydata_send.mode = tmp_mode;
@@ -702,25 +706,32 @@ void ReadHwData() {
       mydata_send.navKeyReset = 0;
     }
     
-    leftJoystick1_X  = analogRead(A0);
-    leftJoystick1_Y  = analogRead(A1);
-    rightJoystick1_X = analogRead(A2);
-    rightJoystick1_Y = analogRead(A3);
-    
-    leftJoystick2_X  = analogRead(A4);
-    leftJoystick2_Y  = analogRead(A5);
-    rightJoystick2_X = analogRead(A6);
-    rightJoystick2_Y = analogRead(A7);
-    
-    mydata_send.stick1_X = leftJoystick1_X;
-    mydata_send.stick1_Y = leftJoystick1_Y;
-    mydata_send.stick2_X = rightJoystick1_X;
-    mydata_send.stick2_Y = rightJoystick1_Y;
 
-    mydata_send.stick3_X = leftJoystick2_X;
-    mydata_send.stick3_Y = leftJoystick2_Y;
-    mydata_send.stick4_X = rightJoystick2_X;
-    mydata_send.stick4_Y = rightJoystick2_Y;
+
+     leftUpJoystick_X = analogRead(A0);
+     leftUpJoystick_Y = analogRead(A1);
+    rightUpJoystick_X = analogRead(A2);
+    rightUpJoystick_Y = analogRead(A3);
+    
+     leftDownJoystick_X = analogRead(A4);
+     leftDownJoystick_Y = analogRead(A5);
+    rightDownJoystick_X = analogRead(A6);
+    rightDownJoystick_Y = analogRead(A7);
+
+     leftDownJoystick_X = map( leftDownJoystick_X, 0, 1023, 1023, 0);
+     leftDownJoystick_Y = map( leftDownJoystick_Y, 0, 1023, 1023, 0);
+    rightDownJoystick_X = map(rightDownJoystick_X, 0, 1023, 1023, 0);
+    rightDownJoystick_Y = map(rightDownJoystick_Y, 0, 1023, 1023, 0);
+    
+    mydata_send.stick1_X =  leftUpJoystick_X;
+    mydata_send.stick1_Y =  leftUpJoystick_Y;
+    mydata_send.stick2_X = rightUpJoystick_X;
+    mydata_send.stick2_Y = rightUpJoystick_Y;
+    
+    mydata_send.stick3_X =  leftDownJoystick_X;
+    mydata_send.stick3_Y =  leftDownJoystick_Y;
+    mydata_send.stick4_X = rightDownJoystick_X;
+    mydata_send.stick4_Y = rightDownJoystick_Y;
 }
 //--------------end of ReadHwData------------------------------------
 
@@ -740,6 +751,9 @@ void Init_PinModes()
   pinMode(BUTTON3, INPUT_PULLUP);
   pinMode(BUTTON4, INPUT_PULLUP);
   pinMode(BUTTON5, INPUT_PULLUP);
+  
+  pinMode(BLUETOOTH_SWITCH, INPUT_PULLUP);
+  pinMode(DISPLAY_SWITCH, INPUT_PULLUP);
   
   pinMode(SWITCH1Up, INPUT_PULLUP);
   pinMode(SWITCH2Up, INPUT_PULLUP);
