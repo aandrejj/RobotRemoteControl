@@ -321,7 +321,10 @@ void BtWriteEvent(unsigned long currentMillis) {
       String btnsString = "SwU"+String(switch1Up)+String(switch2Up)+String(switch3Up)+""+String(switch4Up)+String(switch5Up)+" SwD"+ String(switch1Down)+""+String(switch2Down)+""+String(switch3Down)+""+String(switch4Down)+String(switch5Down);
       //String btnsString = "Btn"+String(button1)+""+String(button2)+""+String(button3)+""+String(button4)+""+String(button5)+""+String(rotary_key) +" Nav"+ String(navKeyUp)+""+String(navKeyDown)+""+String(navKeyLeft)+""+String(navKeyRight)+""+String(navKeyMiddle)+""+String(navKeySet)+""+String(navKeyReset);
 
-      myLcd.showMeasuredDateScreen(leftJoystick_X, rightJoystick_X, leftJoystick_Y, rightJoystick_Y, btnsString, "");
+      myLcd.showMeasuredDateScreen4(leftUpJoystick_X, rightUpJoystick_X, leftDownJoystick_X, rightDownJoystick_X, leftUpJoystick_Y, rightUpJoystick_Y, leftDownJoystick_Y, rightDownJoystick_Y, btnsString, "");
+      //myLcd.showMeasuredDateScreen(leftUpJoystick_X, rightUpJoystick_X, leftUpJoystick_Y, rightUpJoystick_Y, btnsString, "");
+      //myLcd.showMeasuredDateScreen(leftJoystick3_X, rightJoystick4_X, leftJoystick3_Y, rightJoystick4_Y, btnsString, "");
+
       //myLcd.showMeasuredDateScreen2(leftJoystick_X,leftJoystick_Y, rightJoystick_X, rightJoystick_Y, mydata_send.index_finger_knuckle_right, mydata_send.pinky_knuckle_right, mydata_send.index_finger_fingertip,mydata_send.index_finger_knuckle_left, btnsString, "");
     }
 }
@@ -705,15 +708,30 @@ void ReadHwData() {
     
 
 
-    leftJoystick_X = analogRead(A0);
-    leftJoystick_Y = analogRead(A1);
-    rightJoystick_X = analogRead(A2);
-    rightJoystick_Y = analogRead(A3);
+     leftUpJoystick_X = analogRead(A0);
+     leftUpJoystick_Y = analogRead(A1);
+    rightUpJoystick_X = analogRead(A2);
+    rightUpJoystick_Y = analogRead(A3);
     
-    mydata_send.stick1_X = leftJoystick_X;
-    mydata_send.stick1_Y = leftJoystick_Y;
-    mydata_send.stick2_X = rightJoystick_X;
-    mydata_send.stick2_Y = rightJoystick_Y;
+     leftDownJoystick_X = analogRead(A4);
+     leftDownJoystick_Y = analogRead(A5);
+    rightDownJoystick_X = analogRead(A6);
+    rightDownJoystick_Y = analogRead(A7);
+
+     leftDownJoystick_X = map( leftDownJoystick_X, 0, 1023, 1023, 0);
+     leftDownJoystick_Y = map( leftDownJoystick_Y, 0, 1023, 1023, 0);
+    rightDownJoystick_X = map(rightDownJoystick_X, 0, 1023, 1023, 0);
+    rightDownJoystick_Y = map(rightDownJoystick_Y, 0, 1023, 1023, 0);
+    
+    mydata_send.stick1_X =  leftUpJoystick_X;
+    mydata_send.stick1_Y =  leftUpJoystick_Y;
+    mydata_send.stick2_X = rightUpJoystick_X;
+    mydata_send.stick2_Y = rightUpJoystick_Y;
+    
+    mydata_send.stick3_X =  leftDownJoystick_X;
+    mydata_send.stick3_Y =  leftDownJoystick_Y;
+    mydata_send.stick4_X = rightDownJoystick_X;
+    mydata_send.stick4_Y = rightDownJoystick_Y;
 }
 //--------------end of ReadHwData------------------------------------
 
