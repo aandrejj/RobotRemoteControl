@@ -98,7 +98,8 @@ bool switch4Down;
 bool switch5Down;
 bool switch6Down;
 
-int tmp_mode;
+int16_t tmp_mode;
+int16_t previous_mode;
 
 bool bluetooth_On;
 bool previous_Bluetooth_State;
