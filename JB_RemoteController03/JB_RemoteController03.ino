@@ -93,9 +93,9 @@ void setup() {
   bluetooth_connecting = false;
   bluetooth_connected = false;
 
-  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
-  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
-  Serial.print("bluetooth_On = "+ String(bluetooth_On));
+  bluetooth_On = 1; //digitalRead(BLUETOOTH_SWITCH);
+  showDataOnDisplay = 0;//digitalRead(DISPLAY_SWITCH);
+  Serial.print("setup:  bluetooth_On = "+ String(bluetooth_On));
   Serial.println(" showDataOnDisplay = "+ String(showDataOnDisplay));
    
   if(bluetooth_On) {
@@ -318,7 +318,7 @@ void BtWriteEvent(unsigned long currentMillis) {
     }
     
     if(showForm == form_ShowMeasuredData){
-      String btnsString = "SwU"+String(switch1Up)+String(switch2Up)+String(switch3Up)+""+String(switch4Up)+String(switch5Up)+" SwD"+ String(switch1Down)+""+String(switch2Down)+""+String(switch3Down)+""+String(switch4Down)+String(switch5Down);
+      String btnsString = "SwU"+String(switch1Up)+String(switch2Up)+String(switch3Up)+""+String(switch4Up)+String(switch5Up)+String(switch6Up)+" SwD"+ String(switch1Down)+""+String(switch2Down)+""+String(switch3Down)+""+String(switch4Down)+String(switch5Down)+String(switch6Down);
       //String btnsString = "Btn"+String(button1)+""+String(button2)+""+String(button3)+""+String(button4)+""+String(button5)+""+String(rotary_key) +" Nav"+ String(navKeyUp)+""+String(navKeyDown)+""+String(navKeyLeft)+""+String(navKeyRight)+""+String(navKeyMiddle)+""+String(navKeySet)+""+String(navKeyReset);
 
       myLcd.showMeasuredDateScreen4(leftUpJoystick_X, rightUpJoystick_X, leftDownJoystick_X, rightDownJoystick_X, leftUpJoystick_Y, rightUpJoystick_Y, leftDownJoystick_Y, rightDownJoystick_Y, btnsString, "");
@@ -351,7 +351,7 @@ void loop_Handling_formMenu(){
   long newPosition = myEnc.read();
   if (newPosition != oldPosition) {
     oldPosition = newPosition;
-    //Serial.println(newPosition);
+    //Serial.println("encoder newPosition = "+String(newPosition));
     newEncoderPosition = (newPosition/4);
     if(showForm == form_ShowMeasuredData) {
       lcd.setCursor(16,3);
@@ -359,6 +359,7 @@ void loop_Handling_formMenu(){
     }
 
     if(oldEncoderPosition != newEncoderPosition) {
+      //Serial.println("newEncoderPosition "+String(newEncoderPosition));
       if(newEncoderPosition < oldEncoderPosition) {
         menu.up();
       }
@@ -432,8 +433,8 @@ void loop_Handling_rotary_key() {
 void loop() {
 
   unsigned long currentMillis = millis();
-  bluetooth_On = digitalRead(BLUETOOTH_SWITCH);
-  showDataOnDisplay = digitalRead(DISPLAY_SWITCH);
+  bluetooth_On = 1; //digitalRead(BLUETOOTH_SWITCH);
+  showDataOnDisplay = 0; //digitalRead(DISPLAY_SWITCH);
   button1 =  digitalRead(BUTTON1);
   button3 =  digitalRead(BUTTON3);
 
@@ -584,12 +585,14 @@ void ReadHwData() {
      switch3Up =  digitalRead(SWITCH3Up);
      switch4Up =  digitalRead(SWITCH4Up);
      switch5Up =  digitalRead(SWITCH5Up);
+     switch6Up =  digitalRead(SWITCH6Up);
 
      switch1Down =  digitalRead(SWITCH1Down);
      switch2Down =  digitalRead(SWITCH2Down);
      switch3Down =  digitalRead(SWITCH3Down);
      switch4Down =  digitalRead(SWITCH4Down);
      switch5Down =  digitalRead(SWITCH5Down);
+     switch6Down =  digitalRead(SWITCH6Down);
 
     tmp_mode = 0;
     if(switch1Up == 0) {
@@ -612,24 +615,28 @@ void ReadHwData() {
       tmp_mode = tmp_mode + 16;
     }
 
-    if(switch1Down == 0) {
+    if(switch6Up == 0) {
       tmp_mode = tmp_mode + 32;
     }
 
-    if(switch2Down == 0) {
+    if(switch1Down == 0) {
       tmp_mode = tmp_mode + 64;
     }
 
-    if(switch3Down == 0) {
+    if(switch2Down == 0) {
       tmp_mode = tmp_mode + 128;
     }
 
-    if(switch4Down == 0) {
+    if(switch3Down == 0) {
       tmp_mode = tmp_mode + 256;
     }
 
-    if(switch5Down == 0) {
+    if(switch4Down == 0) {
       tmp_mode = tmp_mode + 512;
+    }
+
+    if(switch5Down == 0) {
+      tmp_mode = tmp_mode + 1024;
     }
 
     mydata_send.mode = tmp_mode;
@@ -760,12 +767,14 @@ void Init_PinModes()
   pinMode(SWITCH3Up, INPUT_PULLUP);
   pinMode(SWITCH4Up, INPUT_PULLUP);
   pinMode(SWITCH5Up, INPUT_PULLUP);
+  pinMode(SWITCH6Up, INPUT_PULLUP);
 
   pinMode(SWITCH1Down, INPUT_PULLUP);
   pinMode(SWITCH2Down, INPUT_PULLUP);
   pinMode(SWITCH3Down, INPUT_PULLUP);
   pinMode(SWITCH4Down, INPUT_PULLUP);
   pinMode(SWITCH5Down, INPUT_PULLUP);
+  pinMode(SWITCH6Down, INPUT_PULLUP);
 
   pinMode(NAV_KEY_UP, INPUT_PULLUP);
   pinMode(NAV_KEY_DWN, INPUT_PULLUP);
