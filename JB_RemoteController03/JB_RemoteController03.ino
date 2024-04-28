@@ -62,7 +62,7 @@ int state; // BT state
 int previous_state;
 
 unsigned long previousMillis = 0;
-const long interval = 100;
+const long interval = 180;
 
 unsigned long previousDispMillis = 0;
 const long Dispinterval = 10;
@@ -128,7 +128,10 @@ void setup() {
   menuIsShown = true;
   showForm = form_Menu;
   // Initialize LcdMenu with the menu items
-    menu.setupLcdWithMenu(0x27, mainMenu);
+  menu.setupLcdWithMenu(0x27, mainMenu);
+
+  tmp_mode = 0;
+  previous_mode = tmp_mode;
 }
 //----------------------------end of setup()------------------------------------
 //----------------------------BT_to_serial_prepare-----------------------------------------
@@ -594,6 +597,8 @@ void ReadHwData() {
      switch5Down =  digitalRead(SWITCH5Down);
      switch6Down =  digitalRead(SWITCH6Down);
 
+    previous_mode = tmp_mode;
+
     tmp_mode = 0;
     if(switch1Up == 0) {
       tmp_mode = tmp_mode + 1;
@@ -618,7 +623,7 @@ void ReadHwData() {
     if(switch6Up == 0) {
       tmp_mode = tmp_mode + 32;
     }
-
+/*
     if(switch1Down == 0) {
       tmp_mode = tmp_mode + 64;
     }
@@ -639,8 +644,17 @@ void ReadHwData() {
       tmp_mode = tmp_mode + 1024;
     }
 
+    if(switch6Down == 0) {
+      tmp_mode = tmp_mode + 2048;
+    }
+*/
+    if(previous_mode != tmp_mode) {
+      Serial.println("New  tmp_mode ="+String(tmp_mode));
+    }
+
     mydata_send.mode = tmp_mode;
 
+    /*
     if (button1 == 0) {
       mydata_send.menuDown = 1;
     } else {
@@ -670,6 +684,7 @@ void ReadHwData() {
     } else {
       mydata_send.toggleTop = 0;
     }
+    */
 
     if (navKeyUp == 0) {
       mydata_send.navKeyUp = 1;
