@@ -62,7 +62,7 @@ int state; // BT state
 int previous_state;
 
 unsigned long previousMillis = 0;
-const long interval = 180;
+const long interval = 350;
 
 unsigned long previousDispMillis = 0;
 const long Dispinterval = 10;
