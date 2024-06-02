@@ -18,9 +18,9 @@ extern MenuItem* bluetoothMenu[];
 
 // Initialize the main menu items
 MAIN_MENU(
-    ITEM_COMMAND("Show measured data", show_measured_data),
-    ITEM_COMMAND("dexHand 3CA308B4E3B5", at_con_adr1_cmd),
-    ITEM_COMMAND("gripHand0CB2B766319C", at_con_adr2_cmd),
+    ITEM_COMMAND("Start transfer data", show_measured_data),
+    ITEM_COMMAND("Connect dexHand 3CA", at_con_adr1_cmd),
+    ITEM_COMMAND("Connect gripHand0CB", at_con_adr2_cmd),
     ITEM_SUBMENU("Bluetooth", bluetoothMenu),
     ITEM_SUBMENU("Settings", settingsMenu),
     ITEM_TOGGLE("Backlight", toggleBacklight),
